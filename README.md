@@ -4,6 +4,8 @@ A geospatial modeling application that uses sea-level rise projections to map po
 
 **Aplicação: costa do Estado da Bahia (Brasil).** Interface gráfica + biblioteca Python + scripts de aquisição de dados (Google Earth Engine / Colab / Python) + documento de métodos.
 
+> 📘 **Tutorial passo a passo de cada aplicação (executável, interface, modelos O1–O5, validação, scripts 01–13, lote e biblioteca): [`docs/03_Tutorial.md`](docs/03_Tutorial.md).**
+
 ## Modelos (níveis de complexidade da revisão)
 
 | ID | Modelo | Saídas principais |
@@ -27,7 +29,9 @@ CoastShift/
 ├── docs/
 │   ├── 00_PLANO_ECONOMIA_TOKENS.md
 │   ├── 01_Metodos_Opcao2_Bahia.md   métodos, equações, dados, validação
-│   └── 02_Formato_Pacote.md
+│   ├── 02_Formato_Pacote.md
+│   └── 03_Tutorial.md               tutorial de uso de cada aplicação
+├── executavel/CoastShift.exe   executável Windows (Git LFS)
 ├── tests/test_smoke.py
 ├── CoastShift.spec / build_exe.bat  compilação do executável
 └── requirements.txt
@@ -35,7 +39,7 @@ CoastShift/
 
 ## Uso rápido
 
-**Executável (Windows 10/11, 64 bits):** baixe `CoastShift.exe` em *Releases*, abra-o e use **1 Dados → Gerar pacote de DEMONSTRAÇÃO**. Depois escolha o modelo em **2 Modelo → Executar**. Não precisa de Python.
+**Executável (Windows 10/11, 64 bits):** baixe `executavel/CoastShift.exe` (Git LFS, ~172 MB), abra-o e use **1 Dados → Gerar pacote de DEMONSTRAÇÃO**. Depois escolha o modelo em **2 Modelo → Executar**. Não precisa de Python. Detalhes no [tutorial](docs/03_Tutorial.md).
 
 **A partir do código:**
 ```bash
