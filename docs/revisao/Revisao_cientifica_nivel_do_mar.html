@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelagem espacial da elevação do nível do mar</title>
+<style>:root { color-scheme: light; font: 17px/1.62 Georgia, serif; color: #20343f; background: #eef3f4; }
+body { margin: 0; }
+main { max-width: 980px; margin: 0 auto; padding: 3.75rem 3.5rem 4.5rem; background: #fff; }
+h1,h2,h3,nav,.fluxo { font-family: Arial, sans-serif; line-height: 1.23; color: #123a48; }
+h1 { font-size: clamp(2.15rem,6vw,3.6rem); max-width: 17ch; letter-spacing: -.045em; margin: 0 0 .65rem; }
+h2 { margin: 2.45rem 0 .8rem; border-top: 1px solid #cddcdd; padding-top: .9rem; font-size: 1.58rem; }
+h3 { margin: 1.65rem 0 .55rem; font-size: 1.13rem; }
+p { margin: .75rem 0; }
+a { color: #00656b; text-decoration-thickness: .07em; text-underline-offset: .15em; overflow-wrap: anywhere; }
+a:focus-visible { outline: 2px solid #007f86; outline-offset: 3px; }
+nav { margin: 1.65rem 0; background: #eaf4f4; padding: 1.15rem; display: flex; flex-wrap: wrap; gap: .65rem 1.1rem; font-size: .82rem; }
+pre { padding: 1rem; border-left: 3px solid #27818a; background: #eff6f6; overflow-x: auto; font-size: .83rem; }
+code { font-family: Consolas, monospace; }
+table { margin: 1.35rem 0; width: 100%; border-collapse: collapse; font: .82rem/1.45 Arial, sans-serif; }
+th,td { padding: .65rem .72rem; border: 1px solid #c9dada; vertical-align: top; }
+th { color: #fff; background: #145763; text-align: left; }
+tbody tr:nth-child(even) { background: #eff6f6; }
+li { margin: .45rem 0; }
+.fluxo { list-style: none; padding: 0; margin: 1.1rem 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 1.15rem; font-size: .79rem; }
+.fluxo li { position: relative; padding: .7rem .65rem; min-height: 3.6rem; display: grid; align-items: center; margin: 0; background: #eaf4f4; border-top: 3px solid #2b8288; }
+.fluxo li:last-child { background: #dbeeee; }
+.fluxo li+li::before { position: absolute; left: -1.01rem; top: 50%; transform: translateY(-50%); content: '→'; color: #145763; }
+@media(max-width: 720px) { main { padding: 2rem 1.15rem 3rem; } table { display: block; overflow-x: auto; } .fluxo { grid-template-columns: 1fr; gap: 1rem; } .fluxo li { min-height: 0; } .fluxo li+li::before { content: '↓'; left: 50%; top: -.58rem; } }
+@media print { :root, main { color: #111; background: #fff; } main { padding: 0; } nav { display: none; } h2,h3 { break-after: avoid; } tr,.fluxo { break-inside: avoid; } }</style></head><body><main>
+<h1>Modelagem espacial da elevação do nível do mar</h1>
+<p><strong>Revisão crítica da literatura internacional e guia de implementação</strong><br>Literatura prioritária de 2000 a 18 de novembro de 2026 · Projeções, inundação, linha de costa, habitats e exposição</p>
+<h2>Resumo</h2>
+<p>Esta revisão compara como diferentes métodos transformam projeções do nível do mar em produtos espaciais. A busca dirigida reuniu 30 trabalhos com DOI, de estudos sobre topografia e projeções probabilísticas a aplicações hidrodinâmicas e emuladores. O material complementar documenta 32 bases geoespaciais, 18 modelos ou ferramentas e 16 cenários ou produtos de cenário. A evidência aponta a importância do alinhamento vertical entre água e terreno e da representação de conectividade hidráulica, estruturas e movimento vertical do terreno. Para triagem comparável em grandes áreas, uma análise altimétrica conectada com incerteza explícita costuma ser um ponto de partida viável. Para profundidade, duração, galgamento e inundação composta, a escolha depende de hidrogramas, batimetria, estruturas e validação por evento. Recuo da linha de costa e mudança de habitats exigem dados e relações próprias de sedimentos, acreção e espaço para migração. A revisão oferece três fluxos operacionais e recomendações condicionais por escala. <a href="outputs/01a1ee55-992e-7a12-8db7-0a002596d7ba/Matrizes_nivel_do_mar.xlsx">Matrizes e fontes dos produtos</a>.</p>
+<nav aria-label="Sumário">
+<a href="#metodo">Método de revisão</a>
+<a href="#conceitos">Grandezas e referenciais</a>
+<a href="#cenarios">IPCC e cenários</a>
+<a href="#modelagem">Famílias de modelos</a>
+<a href="#dados">Bases e implementação</a>
+<a href="#validacao">Validação e incertezas</a>
+<a href="#fluxos">Fluxos de aplicação</a>
+<a href="#sintese">Escolha e lacunas</a>
+<a href="#referencias">Referências</a>
+</nav>
+
+<p><a id="metodo"></a></p>
+<h2>1. Método de revisão</h2>
+<p>Foi realizado um <strong>levantamento crítico com busca dirigida e extração padronizada</strong>. Uma revisão sistemática exigiria protocolo, busca documentada por base, triagem rastreável do universo recuperado e avaliação formal dos estudos. Uma revisão de escopo também exigiria registro de seleção, ainda que sua finalidade principal fosse mapear a extensão da evidência. Nesta revisão, o corpus é intencional e serve à comparação de métodos e escolhas de implementação. A quantidade de estudos encontrados em cada família reflete esse recorte.</p>
+<p><strong>Fontes e execução.</strong> A pesquisa pública de 18 de novembro de 2026 recuperou estudos e registros em Nature Portfolio, AGU/Wiley, ScienceDirect, SpringerLink, Copernicus Publications, Frontiers e repositórios institucionais, além de documentação de IPCC, NASA, NOAA, USGS, Copernicus, IBGE e outros produtores. Scopus e Web of Science não foram consultadas em sessões autenticadas. Não houve exportação do Google Scholar nem censo bibliométrico. As expressões abaixo permitem repetir e expandir a cobertura nas bases indexadas. Para a busca pública, exemplos dos termos efetivamente usados foram “Poulter Halpin raster modelling coastal flooding sea level rise”, “Leijnse computationally efficient reduced physics solver Coastal Engineering”, “pan-European assessment coastal flood hazards 25 m”, “Guanabara Bay 06556 regional model”, “global river deltas subsidence Ohenhen” e “HyFlood compound coastal flooding validation”.</p>
+<p><strong>Seleção e extração.</strong> Incluíram-se artigos internacionais revisados por pares e contribuições metodológicas com DOI, além de avaliações e documentações oficiais para cenários, versões e dados. Para compor o corpus, exigiu-se contribuição direta a pelo menos uma etapa da cadeia espacial, evidência comparativa, descrição do método ou insumo documentado. Aplicações detalhadas, contrastes entre métodos e trabalhos recentes foram procurados em cada grupo. Excluíram-se duplicatas, textos promocionais como evidência de desempenho, resultados sem vínculo com a cadeia costeira e estudos que apenas projetavam temperatura sem informar nível do mar ou seus efeitos. Usaram-se DOI e versão para deduplicação. A documentação de modelos e bases aparece em tabelas próprias.</p>
+<p><strong>Acesso e força da evidência.</strong> Métodos, tabelas, apêndices ou versões institucionais foram usados quando acessíveis. Alguns textos integrais ficaram indisponíveis, incluindo a página de assinatura do estudo de Guanabara. A matriz indica em cada linha a fonte e o nível de acesso. <strong>NV</strong> indica dado não verificado na fonte acessada, inclusive quando apenas um resumo estava disponível. <strong>NA</strong> indica campo inaplicável. A classe de potencial de reprodução é julgamento qualitativo desta revisão, condicionado a código, versões, forçantes e calibração. Foram priorizadas validações com observações independentes e estudos comparativos sob forçantes e topografia equivalentes. Uma demonstração numérica ou um bom ajuste a outra simulação sustenta uma conclusão mais restrita. A seleção não permite estimar prevalência de métodos nem realizar metanálise de acurácia.</p>
+<h3>Expressões completas para buscas indexadas</h3>
+<p>Executar as duas expressões de cada base, combinar os resultados e deduplicar por DOI, depois por título, ano e autoria. Revisar títulos e resumos em uma etapa e textos integrais na seguinte. Para uma atualização formal, guardar hora, consulta, exportação, contagens, motivo de exclusão em texto integral e registro de decisões. Estudos fundadores anteriores a 2000 podem entrar por referências citadas, após a mesma verificação de elegibilidade. Em 2026, filtrar pelas datas de publicação efetiva até 18 de novembro.</p>
+<p><strong>Scopus — processos espaciais</strong></p>
+<pre><code class="language-text">TITLE-ABS-KEY(
+  (&quot;sea level rise&quot; OR &quot;sea-level rise&quot; OR &quot;sea level change&quot; OR &quot;relative sea level&quot;
+   OR &quot;coastal flooding&quot; OR &quot;coastal inundation&quot; OR &quot;extreme sea level*&quot;)
+  AND
+  (&quot;spatially explicit&quot; OR &quot;geospatial simulation&quot; OR &quot;inundation mapping&quot;
+   OR &quot;coastal vulnerab*&quot; OR &quot;digital elevation model*&quot; OR &quot;hydraulic connectiv*&quot;
+   OR bathtub OR hydrodynamic* OR morphodynamic* OR &quot;coastal erosion&quot;
+   OR &quot;shoreline change&quot; OR &quot;wetland migration&quot; OR &quot;compound flood*&quot;
+   OR &quot;machine learning&quot; OR &quot;deep learning&quot; OR &quot;random forest&quot; OR &quot;surrogate model*&quot;)
+)
+AND PUBYEAR &gt; 1999 AND PUBYEAR &lt; 2027
+</code></pre>
+<p><strong>Scopus — projeções, cenários e incertezas</strong></p>
+<pre><code class="language-text">TITLE-ABS-KEY(
+  (&quot;sea level rise&quot; OR &quot;sea-level rise&quot; OR &quot;sea level change&quot; OR &quot;relative sea level&quot;
+   OR &quot;extreme sea level*&quot; OR &quot;coastal flood*&quot;)
+  AND
+  (&quot;future scenario*&quot; OR &quot;climate projection*&quot; OR &quot;probabilistic projection*&quot; OR
+   &quot;uncertainty assessment&quot; OR downscal* OR regionalis* OR regionaliz* OR
+   &quot;vertical land motion&quot; OR subsidence OR IPCC OR AR5 OR AR6 OR CMIP5 OR CMIP6 OR
+   &quot;shared socioeconomic pathway*&quot; OR SSP* OR &quot;representative concentration pathway*&quot; OR RCP*)
+  AND
+  (coast* OR region* OR &quot;tide gauge*&quot; OR inundat* OR scenario* OR project* OR probabil*)
+)
+AND PUBYEAR &gt; 1999 AND PUBYEAR &lt; 2027
+</code></pre>
+<p><strong>Web of Science Core Collection — processos espaciais</strong></p>
+<pre><code class="language-text">TS=(
+  (&quot;sea level rise&quot; OR &quot;sea-level rise&quot; OR &quot;sea level change&quot; OR &quot;relative sea level&quot;
+   OR &quot;coastal flooding&quot; OR &quot;coastal inundation&quot; OR &quot;extreme sea level*&quot;)
+  AND
+  (&quot;spatially explicit&quot; OR &quot;geospatial simulation&quot; OR &quot;inundation mapping&quot;
+   OR &quot;coastal vulnerab*&quot; OR &quot;digital elevation model*&quot; OR &quot;hydraulic connectiv*&quot;
+   OR bathtub OR hydrodynamic* OR morphodynamic* OR &quot;coastal erosion&quot;
+   OR &quot;shoreline change&quot; OR &quot;wetland migration&quot; OR &quot;compound flood*&quot;
+   OR &quot;machine learning&quot; OR &quot;deep learning&quot; OR &quot;random forest&quot; OR &quot;surrogate model*&quot;)
+)
+AND PY=(2000-2026)
+</code></pre>
+<p><strong>Web of Science Core Collection — projeções, cenários e incertezas</strong></p>
+<pre><code class="language-text">TS=(
+  (&quot;sea level rise&quot; OR &quot;sea-level rise&quot; OR &quot;sea level change&quot; OR &quot;relative sea level&quot;
+   OR &quot;extreme sea level*&quot; OR &quot;coastal flood*&quot;)
+  AND
+  (&quot;future scenario*&quot; OR &quot;climate projection*&quot; OR &quot;probabilistic projection*&quot; OR
+   &quot;uncertainty assessment&quot; OR downscal* OR regionalis* OR regionaliz* OR
+   &quot;vertical land motion&quot; OR subsidence OR IPCC OR AR5 OR AR6 OR CMIP5 OR CMIP6 OR
+   &quot;shared socioeconomic pathway*&quot; OR SSP* OR &quot;representative concentration pathway*&quot; OR RCP*)
+  AND
+  (coast* OR region* OR &quot;tide gauge*&quot; OR inundat* OR scenario* OR project* OR probabil*)
+)
+AND PY=(2000-2026)
+</code></pre>
+<p><a id="conceitos"></a></p>
+<h2>2. Grandezas físicas e referenciais</h2>
+<p><strong>Nível médio global do mar (GMSL)</strong> é a média espacial sobre o oceano. <strong>Mudança regional do nível do mar</strong> incorpora dinâmica oceânica e efeitos espacialmente variáveis da redistribuição de massas. <strong>Nível relativo local (RSL)</strong> é a altura da água em relação ao terreno ou marco local. Considerando mesma época e referencial, a mudança relativa é a mudança geocêntrica da água menos o movimento vertical do terreno (VLM), com terreno subindo definido como positivo. Marégrafos observam a grandeza relativa. Altimetria observa a superfície oceânica em um sistema geocêntrico. GNSS e InSAR fornecem evidência sobre o movimento do terreno, com suportes espaciais, épocas e limitações distintos. A identidade é um guia contábil: GIA, deformação induzida por redistribuição de massas e VLM podem já estar incluídos em módulos ou produtos. <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-9/">AR6, WGI cap. 9</a>, <a href="https://doi.org/10.1002/2014EF000239">Kopp et al. 2014</a>, <a href="https://doi.org/10.1038/s41586-025-09928-6">Ohenhen et al. 2026</a>.</p>
+<p><strong>Datum vertical e época do cenário.</strong> O zero do elipsoide, do geóide, de um datum ortométrico nacional, do nível médio local e da preamar média pode representar superfícies diferentes. Um GeoTIFF em WGS 84 horizontal pode ter alturas ortométricas EGM96 ou EGM2008. Antes do mapeamento, converta cotas de terreno, leito, estruturas, marégrafos e condições de contorno para a mesma referência vertical. Use transformação documentada e, quando possível, amarre-a a marcos geodésicos e a uma rede de estações. Defina a época dos levantamentos e do nível de partida separadamente. A junção entre topografia e batimetria exige checar datum da carta, sinal da profundidade, descontinuidades e correspondência temporal. Uma transformação horizontal reprojetada sozinha deixa o problema vertical em aberto. <a href="https://doi.org/10.3389/feart.2018.00230">Gesch 2018</a>, <a href="https://doi.org/10.1038/s41586-026-10196-1">Seeger &amp; Minderhoud 2026</a>, <a href="https://doi.org/10.1038/s41586-026-11017-1">adendo sobre a configuração dos geoides</a>, <a href="https://vdatum.noaa.gov/">NOAA VDatum</a>.</p>
+<p>Em uma referência de altura e época comum, a configuração mínima pode ser expressa assim:</p>
+<pre><code class="language-text">ηm(x,t,s) = ηbase(x,t0) + ΔRSL(x,t,s; t0)
+</code></pre>
+<p>Aqui, ηm é o nível médio futuro no local x e sob o cenário s. A linha de base ηbase é o nível médio do mar do período adotado, expresso no datum do terreno. Para mapear uma preamar de referência, use essa preamar como altura de partida e declare separadamente a hipótese de mudança de amplitude da maré. Se o produto fornece anomalias relativas a uma base diferente, calcule a mudança entre t0 e t dentro de cada trajetória, preservando a dependência temporal. Subtrair percentis marginais de dois anos em geral não estima a distribuição da diferença. Se a deriva vertical local adicional for conhecida e estiver ausente do produto, aplique o deslocamento integrado com seu sinal e incerteza. Mantenha um registro do termo original, do termo local e da diferença aplicada. Substituir todo o VLM do produto por uma taxa InSAR sem identificar GIA e outros termos pode contabilizar a mesma contribuição duas vezes. <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-9/">AR6, WGI cap. 9</a>, <a href="https://doi.org/10.5194/gmd-16-7461-2023">FACTS</a>, <a href="https://doi.org/10.1038/s41586-025-09928-6">Ohenhen et al. 2026</a>.</p>
+<p><strong>Nível total durante eventos.</strong> Uma representação conceitual é nível médio + maré + efeito meteorológico + contribuição de ondas. A contribuição de ondas pode designar <em>setup</em> médio ou incluir <em>runup</em> em um ponto de praia, conforme a definição do contorno. A soma só vale para componentes e convenções compatíveis. Se um solver representa maré e surge de forma acoplada, ou se o contorno observado já inclui oscilações, adicionar essas contribuições outra vez introduz viés. Em estuários, canais e cidades, chuva, vazão, drenagem, operação de comportas e interações entre ondas, maré e surge podem controlar a inundação. Compare a submersão potencial em torno de uma cota média, a inundação recorrente vinculada a preamares e a inundação episódica por um evento ou probabilidade anual de excedência. Profundidade estimada a partir de cota média responde a uma pergunta diferente de profundidade máxima dinâmica. <a href="https://www.ipcc.ch/srocc/chapter/chapter-4-sea-level-rise-and-implications-for-low-lying-islands-coasts-and-communities/">IPCC SROCC, cap. 4</a>, <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">Dietrich et al. 2011</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<p><strong>Perigo, exposição e risco.</strong> A extensão, profundidade, velocidade e duração descrevem o perigo. Número de moradores e ativos sobrepostos ao perigo mede exposição. Vulnerabilidade descreve a suscetibilidade a perdas ou a capacidade de resposta. Risco combina a frequência ou distribuição do perigo e suas consequências condicionais. Um índice de vulnerabilidade baseado em rankings e um mapa de pessoas abaixo de cota não têm a mesma interpretação que perda anual esperada. <a href="https://doi.org/10.1073/pnas.1222469111">Hinkel et al. 2014</a>, <a href="https://doi.org/10.5194/nhess-20-1025-2020">Tiggeloven et al. 2020</a>, <a href="https://storage.googleapis.com/releases.naturalcapitalproject.org/invest/3.19.0/userguide/en/coastal_vulnerability.html">InVEST 3.19.0</a>.</p>
+<p><a id="cenarios"></a></p>
+<h2>3. Cenários do IPCC e produtos alternativos</h2>
+<p>O AR5 empregou cenários RCP e projeções informadas por CMIP5. O AR6 usa cenários SSP, simulações CMIP6, emuladores e projeções específicas para componentes como geleiras e mantos de gelo. A avaliação do IPCC combina linhas de evidência: o campo de nível do mar de um único modelo CMIP é insuficiente para recuperar todos os termos avaliados. Os números finais dos cenários remetem à forçante radiativa aproximada em 2100 e não estabelecem equivalência entre, por exemplo, RCP4.5 e SSP2-4.5. Os intervalos abaixo são globais e servem de referência de grandeza. <a href="https://www.ipcc.ch/pdf/assessment-report/ar5/wg1/WG1AR5_Chapter13_FINAL.pdf">AR5, WGI cap. 13</a>, <a href="https://ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter09.pdf">AR6, WGI cap. 9, Tabela 9.9</a>, <a href="https://doi.org/10.5194/gmd-9-1937-2016">Eyring et al. 2016</a>.</p>
+<table>
+<thead>
+<tr>
+<th>AR6, confiança média nos processos</th>
+<th align="right">2030</th>
+<th align="right">2050</th>
+<th align="right">2100</th>
+<th align="right">2150</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SSP1-1.9</td>
+<td align="right">0,09 [0,08–0,12]</td>
+<td align="right">0,18 [0,15–0,23]</td>
+<td align="right">0,38 [0,28–0,55]</td>
+<td align="right">0,57 [0,37–0,86]</td>
+</tr>
+<tr>
+<td>SSP1-2.6</td>
+<td align="right">0,09 [0,08–0,12]</td>
+<td align="right">0,19 [0,16–0,25]</td>
+<td align="right">0,44 [0,32–0,62]</td>
+<td align="right">0,68 [0,46–0,99]</td>
+</tr>
+<tr>
+<td>SSP2-4.5</td>
+<td align="right">0,09 [0,08–0,12]</td>
+<td align="right">0,20 [0,17–0,26]</td>
+<td align="right">0,56 [0,44–0,76]</td>
+<td align="right">0,92 [0,66–1,33]</td>
+</tr>
+<tr>
+<td>SSP3-7.0</td>
+<td align="right">0,10 [0,08–0,12]</td>
+<td align="right">0,22 [0,18–0,27]</td>
+<td align="right">0,68 [0,55–0,90]</td>
+<td align="right">1,19 [0,89–1,65]</td>
+</tr>
+<tr>
+<td>SSP5-8.5</td>
+<td align="right">0,10 [0,09–0,12]</td>
+<td align="right">0,23 [0,20–0,29]</td>
+<td align="right">0,77 [0,63–1,01]</td>
+<td align="right">1,32 [0,98–1,88]</td>
+</tr>
+</tbody></table>
+<p>Mediana e faixa provável em metros relativos a 1995–2014, transcritas da Tabela 9.9. Ela inclui 2090 e não tabula 2070. A distribuição para 2070 está disponível na série decenal do AR6/NASA. Use o valor ou as amostras da série para essa data. O intervalo provável do SSP5-8.5 em 2050 foi transcrito da versão final da tabela (0,20–0,29 m). <a href="https://ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter09.pdf">Tabela 9.9 do AR6</a>, <a href="https://zenodo.org/records/6382554">dados originais</a>, <a href="https://sealevel.nasa.gov/data_tools/17/">interface NASA</a>.</p>
+<table>
+<thead>
+<tr>
+<th>AR5</th>
+<th align="right">Média do período 2081–2100</th>
+<th align="right">Ano 2100</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RCP2.6</td>
+<td align="right">0,40 [0,26–0,55]</td>
+<td align="right">0,44 [0,28–0,61]</td>
+</tr>
+<tr>
+<td>RCP4.5</td>
+<td align="right">0,47 [0,32–0,63]</td>
+<td align="right">0,53 [0,36–0,71]</td>
+</tr>
+<tr>
+<td>RCP6.0</td>
+<td align="right">0,48 [0,33–0,63]</td>
+<td align="right">0,55 [0,38–0,73]</td>
+</tr>
+<tr>
+<td>RCP8.5</td>
+<td align="right">0,63 [0,45–0,82]</td>
+<td align="right">0,74 [0,52–0,98]</td>
+</tr>
+</tbody></table>
+<p>Estimativas globais em metros relativos a 1986–2005. A faixa avaliada no AR5 corresponde à faixa p5–p95 das projeções dos modelos de processos, com a interpretação descrita no relatório. Compare AR5 e AR6 somente depois de harmonizar referência temporal, estatística e horizonte. <a href="https://www.ipcc.ch/pdf/assessment-report/ar5/wg1/WG1AR5_Chapter13_FINAL.pdf">AR5, §13.5.1 e Tabela 13.5</a>.</p>
+<p><strong>Regionalização em três níveis.</strong> (1) Para triagem, extraia o RSL do ponto costeiro compatível com o domínio e documente o identificador, a distância, as unidades e os quantis. (2) Para costa longa ou heterogênea, atribua segmentos conforme ambientes conectados e interpolação ao longo do litoral quando fisicamente coerente. Conserve separações entre baías, estuários e águas abertas e marque intervalos sem suporte. (3) Para resolver circulação de plataforma e estuário, aninhe grades ou transfira hidrogramas de um modelo regional para uma malha de inundação, verificando fronteiras, maré, VLM e balanço. O mapa final pode ter células de 1 m mesmo quando a forçante climática tem suporte de dezenas de quilômetros. Esse refinamento descreve a resposta ao relevo e a hidráulica resolvida, mantendo explícita a escala efetiva da informação climática. <a href="https://doi.org/10.5194/gmd-16-7461-2023">FACTS</a>, <a href="https://doi.org/10.1007/s11069-024-06556-7">Toste et al. 2024</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<p><strong>Probabilidade condicional e cauda.</strong> Para cada cenário, use as distribuições regionais publicadas. O ramo SSP5-8.5 que inclui processos de baixa confiança apresenta 0,88 m [0,63–1,60] em 2100 e 1,98 m [0,98–4,82] em 2150 na Tabela 9.9. O intervalo p17–p83 vem de uma caixa de probabilidade (<em>p-box</em>) que inclui hipóteses de especialistas e de instabilidade de falésias de gelo marinho. O AR6 também discute resultados de baixa probabilidade e alto impacto próximos de 2 m em 2100 e 5 m em 2150 sob emissões muito altas, que não podem ser descartados. Use esses resultados em testes de estresse identificados e reporte a procedência e a ambiguidade estrutural. SSPs são caminhos condicionais. Estimar uma probabilidade agregada sobre os SSPs requer pesos explicitamente justificados. <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/summary-for-policymakers/">AR6, WGI Tabela 9.9 e SPM B.5.3</a>, <a href="https://doi.org/10.5194/gmd-16-7461-2023">FACTS</a>.</p>
+<p><strong>NOAA, NASA e Copernicus.</strong> A NASA disponibiliza as projeções do AR6 e acesso a produtos interagências. A NOAA e parceiros definiram cinco alvos de GMSL em 2100, referidos a 2000: 0,30, 0,50, 1,00, 1,50 e 2,00 m. O relatório fornece regionalização e aplicações especialmente para os EUA e seus territórios. Atribua ao mapa a série regional, época e referência vertical aplicáveis. O C3S fornece séries costeiras modeladas de 1950 a 2050. Para acoplá-las ao AR6, confira no arquivo se e como já há mudança no nível médio, quais experimentos climáticos foram utilizados e se o produto é de maré, surge ou nível total. NOAA e NASA também disponibilizam visualizadores; mapear com o visualizador e executar um solver hidrodinâmico são operações distintas. <a href="https://cdn.oceanservice.noaa.gov/oceanserviceprod/hazards/sealevelrise/noaa-nos-techrpt01-global-regional-SLR-scenarios-US.pdf">Relatório interagências de 2022</a>, <a href="https://sealevel.nasa.gov/faq/16/what-are-the-scenarios-from-the-sea-level-rise-interagency-task-force-and-how-do-they-compare-to-the/">comparação NASA</a>, <a href="https://cds.climate.copernicus.eu/datasets/sis-water-level-change-timeseries-cmip6">séries costeiras C3S</a>.</p>
+<p><a id="modelagem"></a></p>
+<h2>4. Famílias de modelagem espacial</h2>
+<p>O corpus mostra a coexistência de três linhas de evolução. Estudos iniciais de SIG isolaram o efeito da resolução, da conectividade e da cota escolhida. Trabalhos posteriores incorporaram projeções regionais e distribuições de extremos, melhoraram o terreno por sensoriamento remoto e expandiram a simulação de processos. Aplicações recentes usam subgrades, hidrogramas por trecho e emuladores para ampliar escala e número de cenários. A expansão de ferramentas preservou o papel da triagem altimétrica para objetivos compatíveis. A matriz traz as versões ou referências de cada ferramenta e as limitações de acesso ao código e aos insumos. <a href="https://doi.org/10.1080/13658810701371858">Poulter &amp; Halpin 2008</a>, <a href="https://doi.org/10.1038/ncomms11969">Muis et al. 2016</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>, <a href="https://doi.org/10.1016/j.coastaleng.2026.105124">Ricondo et al. 2026</a>.</p>
+<h3>A. Inundação estática</h3>
+<p>No <em>bathtub</em> simples, a máscara candidata é z ≤ η, com z a cota do terreno e η a cota de água em referência comum. A variante conectada usa a mesma máscara e conserva apenas componentes que alcançam uma semente marinha, oceânica ou estuarina definida. A profundidade geométrica potencial é max(0, η − z) no domínio conectado. Pode-se usar QGIS com GRASS, Python com Rasterio e conectividade por raster/grafo ou R com terra e rotinas equivalentes. Registre a conectividade de quatro ou oito vizinhos, as máscaras de água e a estratégia nos limites entre mosaicos. Em terreno baixo, conexões diagonais podem atravessar cantos de barreiras e grades mais grossas podem apagar canais estreitos ou cristas. Diques, comportas e bueiros podem ser acrescentados como restrições de passagem; seu estado deve corresponder ao cenário. <a href="https://doi.org/10.1080/13658810701371858">Poulter &amp; Halpin 2008</a>, <a href="https://grass.osgeo.org/grass-stable/manuals/r.lake.html">GRASS r.lake</a>.</p>
+<p>É a abordagem de menor custo para área potencialmente abaixo da cota, especialmente em triagem global, nacional ou municipal. Valide seu relevo com pontos independentes e coteje conectividade com observações e cartografia local. O modelo estima um estado geométrico de equilíbrio. Em uma tempestade curta, preenchimento, drenagem e resistência do terreno podem restringir a área alcançada. Vazões terrestres e falhas de proteção também podem ampliar a área atingida. Onde a topografia é incerta, publique mapas de concordância e desacordo entre versões plausíveis e quantifique o viés do DEM antes de escolher a grade. <a href="https://doi.org/10.3389/feart.2018.00230">Gesch 2018</a>, <a href="https://doi.org/10.1016/j.rsma.2024.103535">Emmendorfer et al. 2024</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<h3>B. Hidrodinâmica oceânica e inundação</h3>
+<p>Um modelo 2D de águas rasas descreve a continuidade ∂h/∂t + ∇·q = r, com profundidade h, vetor de vazão por unidade de largura q e fonte líquida r. As equações de momento acrescentam gravidade, atrito e, conforme a formulação, advecção, rotação, vento, pressão e tensões de onda. Em uma direção, uma forma inercial local esquemática é ∂q/∂t + gh ∂η/∂x + gn²q|q|/h^(7/3) = 0, com gravidade g e coeficiente de Manning n. O solver resolve molhamento e secagem, e impõe estabilidade por passo temporal e esquema numérico. SFINCS e LISFLOOD-FP oferecem configurações econômicas para planícies e conjuntos de eventos. As versões disponibilizam escolhas de solver e de subgrade; teste termos dominantes e fluxos que a simplificação pode representar mal, como escoamentos com forte advecção ou geometrias muito estreitas. <a href="https://doi.org/10.1016/j.jhydrol.2010.03.027">Bates et al. 2010</a>, <a href="https://doi.org/10.5194/gmd-14-3577-2021">Shaw et al. 2021</a>, <a href="https://doi.org/10.1016/j.coastaleng.2020.103796">Leijnse et al. 2021</a>, <a href="https://deltares.github.io/hydromt_sfincs/stable/">SFINCS e HydroMT</a>.</p>
+<p>Para costa aberta sob ciclones ou quando circulações regionais importam, ADCIRC resolve níveis e correntes em malha não estruturada e SWAN o balanço espectral de ação de ondas. O acoplamento transfere efeitos de onda sobre a circulação e estados de circulação para a propagação de ondas conforme a configuração. No Delft3D FM, D-Flow FM possibilita grades flexíveis e ligações 1D/2D/3D com módulos associados. ROMS é útil para regionalizar o oceano e produzir contornos. Na Baía de Guanabara, Toste et al. compararam 1995–2005 e 2090–2100 com grades ROMS aninhadas e um experimento CMIP5 RCP4.5. A elevação de 0,69 m na Ilha Fiscal é resultado daquele experimento. Com simulações regionais, verifique se o domínio e a grade representam propagação terrestre e estruturas. Caso contrário, transfira os contornos para uma malha dedicada. <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">Dietrich et al. 2011</a>, <a href="https://content.oss.deltares.nl/delft3dfm1d2d/D-Flow_FM_User_Manual_1D2D.pdf">D-Flow FM</a>, <a href="https://doi.org/10.1007/s11069-024-06556-7">Toste et al. 2024</a>.</p>
+<p>Obrigatórios em uma aplicação dinâmica típica: topo-batimetria, fronteiras, rugosidade e condições iniciais. Vento, pressão, ondas, chuva, vazão, infiltração e drenagem tornam-se necessários conforme as fontes e escalas avaliadas. Dimensione a malha pelos caminhos que governam o fluxo e a tolerância da decisão. Defina o passo de saída conforme tempo de concentração e duração dos picos. Os produtos incluem extensão, profundidade máxima, tempo de chegada, duração e, quando o solver e a resolução permitem, velocidade e fluxo. A validação deve medir nível e tempo, além da mancha de inundação. <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">Dietrich et al. 2011</a>, <a href="https://doi.org/10.1016/j.coastaleng.2020.103796">Leijnse et al. 2021</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<h3>C. Evolução da linha de costa</h3>
+<p>Um modelo de uma linha pode escrever a mudança da posição transversal y por divergência de transporte longitudinal Qₛ e por fontes ou sumidouros, em forma esquemática: Hₐ ∂y/∂t = −∂Qₛ/∂s + qₛ, com Qₛ e qₛ definidos em volume de perfil e Hₐ a altura ativa. Módulos adicionais tratam resposta transversal a ondas, movimentos de nível relativo, geologia e restrições locais. O modelo de Vitousek et al. combina componentes transversais, longitudinais e assimilação dos dados de posição da costa. CoastSat extrai posições históricas de imagens para ajuste e avaliação. Normalize a definição da linha de costa e o deslocamento de maré/runup antes de calibrar. Valide por transecto e por bloco de tempo com dados mantidos fora da assimilação. <a href="https://doi.org/10.1002/2016JF004065">Vitousek et al. 2017</a>, <a href="https://doi.org/10.1016/j.envsoft.2019.104528">Vos et al. 2019</a>.</p>
+<p>Para eventos, o XBeach acopla ondas, escoamento e alteração do leito por divergência de transporte de sedimentos. Uma relação típica da família Exner é (1 − p) ∂zᵦ/∂t + ∇·qₛ = 0, com p a porosidade, zᵦ a cota do leito e qₛ o fluxo volumétrico de sedimento sólido. A modelagem de curto prazo precisa de perfis, ondas, níveis, sedimento e condições pré/pós-evento. Em escala decenal, a regra de Bruun e outras respostas de equilíbrio podem servir a sensibilidades com hipóteses explícitas de perfil, sedimento e acomodação. As obras, a geologia e os gradientes do transporte longitudinal justificam limites, variantes ou outros modelos. Compare trajetórias de recuo com e sem aporte de sedimento e proteção. <a href="https://doi.org/10.1016/j.coastaleng.2009.08.006">Roelvink et al. 2009</a>, <a href="https://doi.org/10.1007/s10584-011-0107-8">Ranasinghe et al. 2012</a>, <a href="https://doi.org/10.1038/s41558-020-0697-0">Vousdoukas et al. 2020</a>.</p>
+<h3>D. Habitats e geomorfologia</h3>
+<p>Em marismas e manguezais, a posição relativa de uma plataforma intermareal evolui com sua elevação líquida, o nível relativo local e a migração lateral. A relação conceitual por célula é d(zrel)/dt = a − d(RSL)/dt, onde a é ganho líquido de elevação acima da deformação de referência já contabilizada, incluindo acreção e compactação superficial pertinente. SLAMM usa regras de transição de habitat e parâmetros maregráficos. O modelo global de Schuerch et al. combina espaço para acomodação, sedimentação e pressão de ocupação. Um ganho ou perda projetado depende de regras, cotas, proteção, disponibilidade de sedimento e espaço. Para um caso local, reúna séries multitemporais de habitat, dados de elevação e acreção, salinidade quando relevante, áreas de migração e barreiras antrópicas. Valide classes, transições e taxas de ganho de elevação separadamente. <a href="https://doi.org/10.1016/j.envsoft.2016.06.023">Clough et al. 2016</a>, <a href="https://doi.org/10.1038/s41586-018-0476-5">Schuerch et al. 2018</a>, <a href="https://www.warrenpinnacle.com/prof/SLAMM6/SLAMM_6.7_Technical_Documentation.pdf">manual SLAMM 6.7</a>.</p>
+<h3>E. Extremos e métodos probabilísticos</h3>
+<p>GEV em máximos por bloco e GPD para excedências de limiar são dois esquemas para estimar frequências. No esquema de picos acima de limiar, escolha limiar e regra de independência temporal, avalie estabilidade dos parâmetros e preserve a incerteza. Em condição estacionária, o nível de retorno com probabilidade anual p remete ao quantil de máxima anual F⁻¹(1 − p). Em condições variáveis, avalie p sob a época/cenário e, para ativos com vida útil longa, considere a probabilidade de exceder ao menos uma vez ao longo do horizonte. Um teste de primeira ordem desloca uma distribuição observada de nível extremo por ΔRSL. Quando amplitudes de maré, ocorrência de tempestades, ondas e condições conjuntas mudam, a distribuição e o hidrograma precisam ser reconstruídos. Uma curva de retorno costeira fornece contorno ou limiar para produzir um mapa a partir de método espacial apropriado. <a href="https://doi.org/10.1038/s41598-017-01362-7">Vitousek et al. 2017</a>, <a href="https://doi.org/10.1038/s41467-018-04692-w">Vousdoukas et al. 2018</a>, <a href="https://doi.org/10.5194/gmd-16-7461-2023">FACTS, módulo de extremos</a>.</p>
+<h3>F. Aprendizado de máquina</h3>
+<p>O tipo de alvo determina o produto. O Random Forest do FABDEM estima uma correção de elevação para reduzir efeitos de edifícios e floresta. Modelos por árvores de Xu et al. associaram rótulos de inundação histórica a preditores ambientais em 250 m. Os quatro modelos — Random Forest, XGBoost, LightGBM e CatBoost — tiveram AUC de 0,865 a 0,870 no teste por blocos espaciais. Essa comparação apoia o uso de classificadores para suscetibilidade e priorização local. Uma projeção de cenário exigiria covariáveis futuras coerentes, avaliação de transferência e interpretação física. Redes neurais de Gharehtoragh e Johnson emularam picos simulados de surge em paisagens e níveis diferentes. HyFlood ilustra emulação de profundidade a partir de biblioteca física. Para ambos, separe validação do simulador contra observações e validação do emulador contra simulações independentes. Controle vazamento entre eventos, locais e estados da topografia e faça testes fora da faixa de treino. <a href="https://doi.org/10.1088/1748-9326/ac4d4f">Hawker et al. 2022</a>, <a href="https://doi.org/10.3389/fmars.2026.1948057">Xu et al. 2026</a>, <a href="https://doi.org/10.1038/s44304-024-00032-9">Gharehtoragh &amp; Johnson 2024</a>, <a href="https://doi.org/10.1016/j.coastaleng.2026.105124">Ricondo et al. 2026</a>.</p>
+<h3>G. Modelos acoplados e integrados</h3>
+<p>Uma cadeia prática liga projeções regionais, condições de maré e tempestade, propagação, exposição e perdas. Um acoplamento unidirecional é suficiente quando a resposta do domínio de inundação não realimenta de modo importante o contorno. Onde setup, correntes, batimetria e alteração morfológica interagem, acoplamento hidrodinâmico ou morfodinâmico é justificável. Antes de adicionar um módulo, teste a hipótese que o exige e se há dados para estimar seus parâmetros. Para perigo composto, combine maré, surge, ondas, chuva e vazão em eventos com dependência e defasagem verificadas. Somar os níveis de retorno de cada variável pode produzir uma combinação sem frequência coerente. <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">Dietrich et al. 2011</a>, <a href="https://doi.org/10.1016/j.coastaleng.2020.103796">Leijnse et al. 2021</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<h3>H. Exposição, vulnerabilidade e perdas</h3>
+<p>Sobreponha manchas e profundidades a população, serviços, imóveis e ecossistemas em época e resolução declaradas. Conserve totais ao redistribuir contagens de pessoas e ativos, use CRS de área apropriado e calcule indicadores também por classe e profundidade. Quando o interesse for risco, estime consequências em função do perigo e da exposição usando curvas ou regras de fragilidade calibradas e integre as perdas sobre as probabilidades de excedência. Modelos DIVA e Aqueduct demonstram comparações de adaptação e danos em escala ampla. InVEST Coastal Vulnerability organiza proxies em um ranking relativo por ponto costeiro, útil com dados heterogêneos. Para aplicações de rede ou de ativo, modele acesso, funcionamento, exposição indireta e proteção conforme a decisão. <a href="https://doi.org/10.1073/pnas.1222469111">Hinkel et al. 2014</a>, <a href="https://doi.org/10.5194/nhess-20-1025-2020">Tiggeloven et al. 2020</a>, <a href="https://storage.googleapis.com/releases.naturalcapitalproject.org/invest/3.19.0/userguide/en/coastal_vulnerability.html">InVEST 3.19.0</a>.</p>
+<p><a id="dados"></a></p>
+<h2>5. Inventário e implementação computacional</h2>
+<table>
+<thead>
+<tr>
+<th>Decisão</th>
+<th>Dados mínimos</th>
+<th>Extensões quando mudam a decisão</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Fixar a água de referência</td>
+<td>RSL AR6 e estação/nivelamento, D01–D05</td>
+<td>FES2022 para marés, SWOT/DUACS para estrutura regional e verificação, D04 e D09–D10</td>
+</tr>
+<tr>
+<td>Representar o terreno e o leito</td>
+<td>DEM com datum e época, D11–D16 e D32</td>
+<td>LiDAR topográfico ou topo-batimétrico local, sondagens e cartas com datum; GEBCO para plataforma externa</td>
+</tr>
+<tr>
+<td>Representar VLM</td>
+<td>GNSS em estações e auditoria do termo embutido no AR6, D01 e D20</td>
+<td>Sentinel-1 SLC, GNSS e dados geológicos para estimar gradientes e testar persistência, D21</td>
+</tr>
+<tr>
+<td>Forçar eventos</td>
+<td>Níveis observados e séries meteorológicas, D05–D09 e D18–D19</td>
+<td>Ondas costeiras, precipitação, vazão, drenagem, controles e histórico de defesas, D31</td>
+</tr>
+<tr>
+<td>Representar habitats e costa</td>
+<td>Imagens e mapas de cobertura, D22–D24 e D27</td>
+<td>Declive ativo, sedimentos, levantamentos de posição, acreção, hidrologia e cartografia de habitats, D29 e fontes locais</td>
+</tr>
+<tr>
+<td>Medir exposição</td>
+<td>Pessoas, ativos e ocupação por época, D25–D28</td>
+<td>Cenário de população até 2100, D30, inventários oficiais de ativos e funções de dano</td>
+</tr>
+</tbody></table>
+<p>SRTM e Copernicus DEM são modelos de superfície. CoastalDEM, FABDEM e DeltaDTM aplicam correções distintas, com versões, coberturas, dados de treinamento e licenças próprias. No estudo de Kulp e Strauss, substituir SRTM por CoastalDEM alterou materialmente as estimativas globais de exposição; a magnitude varia com cenário, métrica e dados. Hawker et al. registraram, em sua validação global, MAE urbano de 1,12 m e florestal de 2,88 m para o FABDEM. São métricas de teste de um produto, não erros universais de cada célula. Um grid de cerca de 30 m pode servir a comparações de escala ampla quando seu erro vertical e sua representação de estruturas são aceitáveis. LiDAR e batimetria de referência permitem testar desníveis pequenos, desde que se documentem a época, a cobertura e as incertezas locais. <a href="https://doi.org/10.1038/s41467-019-12808-z">Kulp &amp; Strauss 2019</a>, <a href="https://doi.org/10.1088/1748-9326/ac4d4f">Hawker et al. 2022, Tabela 1</a>, <a href="https://doi.org/10.1038/s41597-024-03091-9">Pronk et al. 2024</a>, <a href="https://www.usgs.gov/3d-elevation-program/topographic-data-quality-levels-qls">padrões 3DEP</a>.</p>
+<p>Em um estudo brasileiro, a RMPG/IBGE e as estações, cartas e metadados do CHM/BNDO ajudam a relacionar o nível observado, o nível de redução e o levantamento topográfico. Reconstrua a ligação por estação, com datas, unidades, marcos e incerteza. A porção da rede altimétrica com datum de Santana exige tratamento compatível com o produto oficial. Para cenários compostos, obtenha vazões e cotas pela rede hidrometeorológica e metadados locais de drenagem. Use MapBiomas, GMW e Sentinel como apoio para ocupação e habitats. Quando a resolução necessária for de dique, canal ou quarteirão, peça levantamentos locais com avaliação de qualidade. <a href="https://www.ibge.gov.br/en/geosciences/geodetic-positioning/geodetic-networks/19307-geodetic-permanent-tide-gauge-network.html">RMPG/IBGE</a>, <a href="https://www.marinha.mil.br/chm/dados-do-bndo/acesso-dados-e-produtos">CHM/BNDO</a>, <a href="https://www.snirh.gov.br/hidroweb/">HidroWeb</a>, <a href="https://doi.org/10.58053/MapBiomas/SJZOLT">MapBiomas 10.1</a>, <a href="https://zenodo.org/records/6894273">Global Mangrove Watch v3</a>.</p>
+<p><strong>Ambientes e formatos.</strong> QGIS/GRASS local permite inspeção e conectividade raster. Python com xarray, Rasterio e GeoPandas ou R com terra e sf permite automatizar cenários e auditoria espacial. Google Earth Engine é útil para séries de satélite e preparação de camadas em grande escala. Os solvers físicos executam com seus motores compilados; Python ou R podem preparar entradas e analisar saídas. Faça o inventário de licenças e publique a configuração, IDs de dados, máscaras, regras de NoData, unidades, CRS horizontal e vertical, parâmetros calibrados, sementes, versões e ambiente. Use GeoTIFF/COG para rasters finais, GeoPackage para vetores e NetCDF com metadados para séries e saídas hidroclimáticas. Disponibilize as tabelas com identificadores de cenário e um exemplo de reprodução quando a licença permitir.</p>
+<p><a id="validacao"></a></p>
+<h2>6. Calibração, validação e sensibilidade</h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>O que calibrar e validar</th>
+<th>Métricas e diagnóstico</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Topografia e datum</td>
+<td>Checar marcos, terreno exposto/vegetado, costuras do DEM e cristas hidráulicas usando GNSS, LiDAR e referências maregráficas independentes</td>
+<td>Viés, MAE, RMSE, percentis do erro e estratos por cobertura e declive</td>
+</tr>
+<tr>
+<td>Hidrodinâmica</td>
+<td>Calibrar maré, atrito e condições iniciais. Validar outros eventos com marégrafos, boias, marcas de cheia e mapas SAR, observando a hora de aquisição</td>
+<td>Erro de nível, fase e amplitude, viés de pico, erro temporal, CSI/IoU = TP/(TP+FP+FN), taxas de acerto e falso alarme, erro de profundidade</td>
+</tr>
+<tr>
+<td>Extremos</td>
+<td>Separar eventos, testar limiar, distribuição, não estacionariedade e dependências. Comparar com eventos ou períodos independentes</td>
+<td>QQ, incerteza dos níveis de retorno, cobertura de intervalos, erro dos quantis e Brier para excedências verificáveis</td>
+</tr>
+<tr>
+<td>Costa e habitats</td>
+<td>Validar séries históricas por transectos, épocas ou regiões independentes; comparar transições, acreção e perfis pós-evento</td>
+<td>MAE/RMSE de posição, viés em tendência, diferença de área/volume, matriz de confusão por classe e erros de transição</td>
+</tr>
+<tr>
+<td>Emuladores e risco</td>
+<td>Testar fora do domínio, em eventos não usados no ajuste, e contra observações quando disponíveis. Checar extrapolação de curvas de dano</td>
+<td>PR-AUC, calibração e Brier para probabilidades; MAE/RMSE por intensidade, erro de cauda e conservação de totais</td>
+</tr>
+</tbody></table>
+<p>Células próximas compartilham dados e erros. Partições aleatórias por pixel podem superestimar desempenho. Use blocos geográficos, datas e eventos separados, estratifique os resultados por morfologia e reserve observações independentes da calibração. Ao comparar uma cena SAR com simulação, coteje o instante observado e a qualidade de detecção, inclusive sombras, vegetação e áreas urbanas. Ao usar registros de campo, informe o erro do próprio benchmark. Metas de aceitação devem refletir a resolução efetiva dos dados e a decisão, como erro tolerável de pico para avaliar uma crista. <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>, <a href="https://doi.org/10.3389/fmars.2026.1948057">Xu et al. 2026</a>.</p>
+<p><strong>Propagação.</strong> Separe incertezas de cenário, variação interna, parâmetros, observação e estrutura do modelo. Para triagem por ensemble, amostre conjuntamente RSL, erro de datum, viés/erro espacial do DEM e hipóteses de conectividade; recalcule a mancha em cada realização. A frequência amostral de uma célula molhada estima a probabilidade condicional às hipóteses declaradas. Amostras de projeção devem manter correlações entre épocas e pontos. Represente erro de DEM por campo correlacionado ou viés por região/classe quando sustentado por dados. Para dinâmica, faça sensibilidades fatoriais ou por amostragem estratificada entre modelos de contorno, batimetria, rugosidade, defesas, hidrogramas, VLM e clima. Use medições de salinidade, ondas, vazão ou acreção quando auxiliem a separar fontes de erro. Documente convergência e incerteza amostral. Mapas de quantis de profundidade, probabilidade condicional e desacordo entre modelos podem contar histórias distintas, especialmente na fronteira inundada. <a href="https://doi.org/10.3389/feart.2018.00230">Gesch 2018</a>, <a href="https://doi.org/10.5194/gmd-16-7461-2023">FACTS</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<p><strong>Erros com maior potencial de alterar a mancha.</strong> Em planícies muito baixas, um deslocamento vertical pequeno pode mudar áreas extensas, principalmente perto do limiar de abertura de caminhos. Em canais e portos, cotas, largura e estado de estruturas podem governar a propagação. Em deltas, subsidência heterogênea aumenta a necessidade de VLM observado e de alternativas à extrapolação linear. Em praias energéticas, declive, setup e galgamento alteram níveis e tempo de entrada. Seeger e Minderhoud encontraram offsets médios de 0,27 m e 0,24 m para as duas configurações de geóide avaliadas. No teste global com +1 m de RSL, o nível medido implicou 31–37% mais terra abaixo do nível do mar, comparado às hipóteses de referência geoidal testadas. O offset médio do estudo não é uma correção transferível para um sítio. <a href="https://doi.org/10.1038/s41586-026-10196-1">Seeger &amp; Minderhoud 2026</a>, <a href="https://doi.org/10.1038/s41586-026-11017-1">adendo</a>, <a href="https://doi.org/10.1038/s41586-025-09928-6">Ohenhen et al. 2026</a>.</p>
+<p><a id="fluxos"></a></p>
+<h2>7. Três delineamentos para aplicação</h2>
+<p>Os delineamentos são propostas desta revisão. Defina antes o tipo de perigo e o período base. Uma combinação inicial para estudos com horizontes longos pode usar SSP1-2.6, SSP2-4.5 e SSP5-8.5, com 2030, 2050, 2070, 2100 e 2150 conforme a vida útil da decisão. Inclua SSP1-1.9 e SSP3-7.0 quando importarem para a comparação, ou use os cinco cenários em triagem automatizada. Adote mediana e faixa regional para cada cenário. Reserve a cauda de baixa confiança a uma camada ou execução separada e documente extremos, ocupação e defesas em eixos independentes. <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-9/">AR6 WGI, cap. 9</a>.</p>
+<h3>Abordagem 1 — Triagem altimétrica</h3>
+<ol class="fluxo" aria-label="Fluxograma da triagem altimétrica">
+<li>Escolher ponto costeiro, anos e quantis do AR6</li>
+<li>Vincular nível de partida e DEM ao mesmo datum</li>
+<li>Aplicar a cota de cada cenário à grade de terreno</li>
+<li>Testar conectividade e incerteza altimétrica</li>
+<li>Publicar manchas potenciais, áreas e metadados</li>
+</ol>
+
+<p><strong>Objetivo e processamento.</strong> Priorizar áreas potencialmente abaixo de um nível médio ou de preamar futura, com SLR local. Insumos mínimos: um DEM, uma referência de água local, um cenário por ano e uma semente costeira. Use D01/D02 e D11–D16. Calcule ηm, aplique a comparação de alturas e gere as máscaras com e sem conectividade para explicitar o efeito da hipótese. Faça controle de NoData e preserve um arquivo de sementes e limiares. Somente com dados de exposição de época conhecida, sobreponha população ou infraestrutura.</p>
+<p><strong>Produtos e validação.</strong> Mapas de área abaixo da cota e extensão conectada, profundidade potencial geométrica, hectares por unidade e faixa de incerteza. Compare cotas com pontos independentes e verifique trajetos potenciais até a costa. Se houver mapa confiável de níveis recorrentes, use-o para checagem de plausibilidade, declarando a diferença entre observação do evento e equilíbrio. Esta opção funciona em estação de trabalho comum para domínios locais ou com blocos/mosaicos em áreas extensas, usando QGIS/GRASS ou Python/R. A reprodução é alta com dados e máscaras redistribuíveis. A limitação principal é a falta de dinâmica temporal e de estruturas subgrade. <a href="https://doi.org/10.1080/13658810701371858">Poulter &amp; Halpin 2008</a>, <a href="https://doi.org/10.3389/feart.2018.00230">Gesch 2018</a>.</p>
+<h3>Abordagem 2 — Triagem regional com conectividade, subsidência e geomorfologia</h3>
+<ol class="fluxo" aria-label="Fluxograma da triagem regional">
+<li>Segmentar a costa e harmonizar as projeções regionais</li>
+<li>Auditar VLM e incorporar o residual local justificável</li>
+<li>Condicionar o DEM por canais e estruturas</li>
+<li>Amostrar níveis, erros verticais e cenários de defesa</li>
+<li>Cruzar manchas, habitats e exposição por cenário</li>
+</ol>
+
+<p><strong>Objetivo e processamento.</strong> Regionalizar uma análise comparável por unidade costeira. Some aos insumos mínimos informação geomorfológica, defesa, conectividade, habitat/ocupação e, quando comprovada, VLM GNSS/InSAR. Use D09, D18–D24 e D27–D31 conforme a área. Defina zonas hidraulicamente conectadas e pontos de contorno adequados. Modele barreiras e passagens como atributos explícitos. Use realizações correlacionadas de níveis e erros regionais para gerar mapas de probabilidade condicional e áreas de desacordo entre hipóteses de proteção. Para extremos, estime níveis por estação com séries adequadas e trate a extensão estática resultante como envoltória potencial. Uma rodada de SFINCS em trechos piloto pode testar o efeito do tempo de enchimento e orientar onde o método precisa mudar.</p>
+<p><strong>Produtos e validação.</strong> GeoTIFF de probabilidade condicional, manchas por hipótese, tabela de exposição por setor e mapa de confiança dos insumos. Cenários de migração de habitat requerem regras explícitas e dados de acreção. Verifique o VLM com estações de referência e a conectividade com inspeções e/ou eventos históricos. Compare trechos representativos antes de transferir parâmetros. Custo baixo a médio para raster/Monte Carlo, e maior para testes dinâmicos ou processamento InSAR. Use QGIS, Python/R e SFINCS opcional. A reprodução depende do acesso às estruturas, séries e covariáveis que controlam a resposta. <a href="https://doi.org/10.1016/j.envsoft.2016.06.023">Clough et al. 2016</a>, <a href="https://doi.org/10.1038/s41586-025-09928-6">Ohenhen et al. 2026</a>, <a href="https://doi.org/10.1016/j.coastaleng.2020.103796">Leijnse et al. 2021</a>.</p>
+<h3>Abordagem 3 — Hidrodinâmica regionalizada e processos costeiros</h3>
+<ol class="fluxo" aria-label="Fluxograma da modelagem hidrodinâmica">
+<li>Projetar níveis regionais e construir hidrogramas conjuntos</li>
+<li>Construir malha com topo-batimetria, atrito e defesas</li>
+<li>Calibrar maré e validar eventos históricos independentes</li>
+<li>Simular ensembles futuros e testar processos acoplados</li>
+<li>Exportar perigo dinâmico, exposição e risco condicionado</li>
+</ol>
+
+<p><strong>Objetivo e processamento.</strong> Estimar profundidade, duração, velocidade, galgamento ou inundação composta em trechos onde essas grandezas importam. Integre projeções D01, marés/atmosfera D06–D09, topografia e batimetria D15–D19, descargas D31 e estruturas/operadores locais. Use modelagem regional, como ROMS, D-Flow FM ou ADCIRC, quando o contorno de estuário/plataforma precisa ser resolvido. Use SFINCS, LISFLOOD-FP ou um domínio dedicado do mesmo motor para propagação local. Siga com SWAN/D-Waves para ondas ou XBeach para erosão e galgamento quando os processos justificarem. Conserve relógio, datum e sinal durante a transferência de fronteira. Se um hidrograma regional já incorpora forçantes marinhas, evite adicioná-las de novo. Para risco por ano/década, amostre eventos conjuntos com pesos ou curvas de excedência coerentes.</p>
+<p><strong>Produtos e validação.</strong> Séries de nível, profundidade máxima, duração, tempo de chegada, velocidade verificável, área inundada e consequências. Calibre em um conjunto de eventos e faça validação em outros, incluindo regimes de forçante contrastantes. Compare contra GTSM/maré regional, marégrafos, boias, marcas de cheia e áreas observadas. Teste convergência de malha, conservação, condição de molhamento/secagem e erro nas cristas e interfaces. Simulações detalhadas podem exigir CPU paralela, alocação compartilhada ou nuvem e armazenamento proporcional ao conjunto de saídas. Reduza custo com ensembles pequenos de teste, acionamento de subgrade validada e execução seletiva de processos acoplados. A reprodução é moderada a alta com configuração, malha, contorno e parâmetros públicos, e limitada onde esses dados têm restrições. <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">Dietrich et al. 2011</a>, <a href="https://doi.org/10.1007/s11069-024-06556-7">Toste et al. 2024</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<p><strong>Exemplo ilustrativo de controle de datum.</strong> Suponha a mesma época de referência para um DEM e um nível médio local a +0,24 m no datum do terreno. Um cenário local de +0,32 m gera uma cota futura de +0,56 m. Uma célula de +0,47 m conectada ao mar tem profundidade geométrica potencial de 0,09 m. Impor o nível médio inicial em zero inverteria a classificação dessa célula. Os números são hipotéticos e o teste não pressupõe que os offsets observados sejam uniformes.</p>
+<p><a id="sintese"></a></p>
+<h2>8. Escolha metodológica, lacunas e conclusão</h2>
+<h3>Ordem de preferência para cada escala</h3>
+<p>Esta ordem é uma recomendação qualitativa para os objetivos indicados. A hierarquia prioriza adequação física ao produto, dados de calibração disponíveis, resolução necessária, custo de execução e reprodução. A ordem pode mudar quando o objetivo passa de triagem para projeto, ou quando a fonte dominante muda de maré meteorológica para erosão, subsidência ou drenagem.</p>
+<table>
+<thead>
+<tr>
+<th>Escala e objetivo</th>
+<th>1ª opção</th>
+<th>2ª opção</th>
+<th>3ª opção e condição de escolha</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Global e supranacional</strong> · triagem de exposição ao nível médio</td>
+<td>RSL regional do AR6 + DEM harmonizado + conectividade + incerteza; comparação homogênea de baixo custo</td>
+<td>Integração segmentada do tipo DIVA/Aqueduct para perdas e proteção com dados socioeconômicos</td>
+<td>Modelos costeiros globais como GTSM com downscaling para estimar extremos ou construir uma amostra de regiões. Exige forçantes e controle de vieses regionais</td>
+</tr>
+<tr>
+<td><strong>Continental, nacional e regional</strong> · priorização de perigo e adaptação</td>
+<td>Fluxo intermediário com setores, VLM, defesas, conectividade e extremos por zona; mantém cobertura do território e auditabilidade</td>
+<td>Hidrodinâmica reduzida em zonas com dados, ou aplicação continental se houver forçantes e capacidade como na Europa de E25</td>
+<td>Modelo oceânico/estuarino acoplado em trechos onde circulação, ondas ou cheias conjuntas alteram decisões</td>
+</tr>
+<tr>
+<td><strong>Local, municipal e alta resolução</strong> · ativos, duração e eventos</td>
+<td>Hidrodinâmica dinâmica calibrada com topo-batimetria e estruturas. Use física reduzida onde os testes mostrem adequação</td>
+<td>Acoplamento explícito com onda, rio ou morfologia quando esse processo muda a classificação ou a decisão, com dados independentes</td>
+<td>Triagem conectada de baixo custo para diagnóstico preliminar quando as séries ou levantamentos ainda são insuficientes</td>
+</tr>
+<tr>
+<td><strong>Qualquer escala</strong> · erosão ou habitat como variável principal</td>
+<td>Modelo de linha de costa, XBeach conforme horizonte/objetivo ou modelo de transição de habitat</td>
+<td>Combine com um modelo de inundação quando a interação for relevante e houver dados</td>
+<td>Use sobreposição para identificar pontos de investigação, mantendo explícita sua interpretação</td>
+</tr>
+</tbody></table>
+<p>A evidência comparativa sugere retornos diferentes conforme o processo e a informação disponível. Cotrim et al. compararam dois solvers nos controles históricos e encontraram resultados dependentes do tipo de planície e da resolução. O modelo continental do estudo foi RFSM-EDA e o SFINCS integrou a comparação nos controles locais. Nos 24 resultados comparados na sensibilidade de solver, oito apresentaram CSI idêntico, nove favoreceram o RFSM-EDA e sete favoreceram o SFINCS. Também houve casos em que o terreno mais fino não melhorou o ajuste, reforçando a necessidade de conferir a topografia efetiva e o objetivo do produto. Mais complexidade ajuda quando um processo causal e seus parâmetros podem ser representados e validados. Nas demais situações, um teste pareado, com forçante, topografia e defesas comuns, pode revelar que melhorar o datum ou a batimetria traz ganho maior que trocar o solver. <a href="https://nhess.copernicus.org/articles/26/1859/2026/">Cotrim et al. 2026, §4.3</a>, <a href="https://doi.org/10.1016/j.jhydrol.2010.03.027">Bates et al. 2010</a>, <a href="https://doi.org/10.1038/s41586-026-10196-1">Seeger &amp; Minderhoud 2026</a>.</p>
+<h3>Lacunas e oportunidades</h3>
+<table>
+<thead>
+<tr>
+<th>Lacuna observada no corpus e na documentação</th>
+<th>Proposta de pesquisa e critério de sucesso</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Transformações verticais pouco documentadas e ligação desigual entre marégrafos e terreno</td>
+<td>Publicar um benchmark com marcos, DEM, datum de carta, nível médio e conversões. Medir o erro vertical e a alteração cartográfica antes e depois do ajuste</td>
+</tr>
+<tr>
+<td>Defesas, comportas e galerias difíceis de recuperar em bases globais</td>
+<td>Publicar inventários com cota, estado e época; implementar cenários de operação e falha. Comparar mapas estáticos e dinâmicos em eventos verificados</td>
+</tr>
+<tr>
+<td>Persistência do VLM e transferência de parâmetros de sedimento, rugosidade e acreção</td>
+<td>Integrar GNSS, InSAR, levantamentos e registros ambientais; comparar persistência linear com cenários de mudança. Validar em áreas fora da calibração e estratificar pelo ambiente</td>
+</tr>
+<tr>
+<td>Validação desigual fora de locais bem instrumentados</td>
+<td>Construir conjuntos de eventos e estações em deltas, estuários tropicais, pequenas ilhas e cidades com baixa cobertura. Publicar mapas de observação e seus erros, com teste cego de transferibilidade</td>
+</tr>
+<tr>
+<td>Combinação de extremos costeiros, chuva e vazão com mudanças morfológicas e socioeconômicas</td>
+<td>Desenvolver cenários fisicamente coerentes de dependência, mudança de exposição e adaptação. Reportar efeitos individuais e combinados sobre tempo de chegada, risco e vias cortadas</td>
+</tr>
+<tr>
+<td>Emuladores bem ajustados no domínio de origem e pouco testados na cauda ou em novas geometrias</td>
+<td>Usar validação por evento, região e regime, com restrições físicas e detecção de extrapolação. Medir viés nas profundidades extremas e testar o sistema completo contra observações</td>
+</tr>
+<tr>
+<td>Trechos onde habitats e linha de costa mudam enquanto a exposição humana cresce</td>
+<td>Acoplar modelos de migração, sedimento e decisão territorial e medir efeito de corredores, relatando sensibilidade a barreiras, aporte e SSP socioeconômico</td>
+</tr>
+</tbody></table>
+<p>Estas são oportunidades derivadas do corpus, sem estimativa de frequência global. Estudos demonstraram sensibilidade ao terreno, à representação de defesas e à evolução da paisagem, mas os ganhos de complexidade e os erros de transferência variam entre regiões. <a href="https://doi.org/10.1038/s41586-018-0476-5">Schuerch et al. 2018</a>, <a href="https://doi.org/10.5194/nhess-20-1025-2020">Tiggeloven et al. 2020</a>, <a href="https://doi.org/10.1038/s44304-024-00032-9">Gharehtoragh &amp; Johnson 2024</a>, <a href="https://doi.org/10.5194/nhess-26-1859-2026">Cotrim et al. 2026</a>.</p>
+<p><strong>Conclusão.</strong> O desenho mais defensável começa com um nível relativo local e uma base vertical documentada. A triagem conectada oferece comparabilidade para selecionar trechos; a simulação dinâmica é indicada quando tempo, fluxo ou interação entre fontes controlam a decisão. Em escalas decenais, a interpretação de erosão, habitat e risco exige modelar sedimentos, espaço de migração, exposição e adaptação conforme o produto. Demonstrar a validade da cadeia pede verificar cada etapa, desde a referência de nível até a observação da resposta, e publicar hipóteses e faixas de incerteza condicionais aos cenários.</p>
+<h3>Cobertura das perguntas e produtos</h3>
+<table>
+<thead>
+<tr>
+<th>Item do prompt</th>
+<th>Onde encontrar</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RQ1–RQ3, evolução, escalas e produtos espaciais</td>
+<td>§§ 2, 4, 7 e 8</td>
+</tr>
+<tr>
+<td>RQ4–RQ7, entradas, cenários, bases e implementação</td>
+<td>§§ 3–5 e planilha Cenários, Bases e Modelos</td>
+</tr>
+<tr>
+<td>RQ8–RQ10, validação, aplicações e escolha</td>
+<td>§§ 6–8</td>
+</tr>
+<tr>
+<td>Produtos 1 e 6</td>
+<td>Relatório e três fluxogramas do § 7</td>
+</tr>
+<tr>
+<td>Produtos 2–5</td>
+<td>Abas Estudos, Bases, Modelos e Cenários da planilha</td>
+</tr>
+<tr>
+<td>Produtos 7 e 8</td>
+<td>Ordem por escala e lacunas do § 8</td>
+</tr>
+</tbody></table>
+<p><a id="referencias"></a></p>
+<h2>Referências</h2>
+<p>As referências E01–E30 seguem os identificadores da planilha. Títulos, periódicos e DOI permitem recuperar a autoria completa e a versão de registro. Os catálogos oficiais de dados e modelos aparecem junto aos itens correspondentes das abas Bases e Modelos.</p>
+<ul>
+<li><strong>E01</strong> · Poulter &amp; Halpin (2008). Raster modelling of coastal flooding from sea-level rise. <em>International Journal of Geographical Information Science, 22(2), 167–182</em>. <a href="https://doi.org/10.1080/13658810701371858">10.1080/13658810701371858</a>.</li>
+<li><strong>E02</strong> · Gesch (2018). Best practices for elevation-based assessments of sea-level rise and coastal flooding exposure. <em>Frontiers in Earth Science, 6, 230</em>. <a href="https://doi.org/10.3389/feart.2018.00230">10.3389/feart.2018.00230</a>.</li>
+<li><strong>E03</strong> · Bates, Horritt &amp; Fewtrell (2010). A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. <em>Journal of Hydrology, 387(1–2), 33–45</em>. <a href="https://doi.org/10.1016/j.jhydrol.2010.03.027">10.1016/j.jhydrol.2010.03.027</a>.</li>
+<li><strong>E04</strong> · Dietrich et al. (2011). Modeling hurricane waves and storm surge using integrally-coupled, scalable computations. <em>Coastal Engineering, 58(1), 45–65</em>. <a href="https://doi.org/10.1016/j.coastaleng.2010.08.001">10.1016/j.coastaleng.2010.08.001</a>.</li>
+<li><strong>E05</strong> · Roelvink et al. (2009). Modelling storm impacts on beaches, dunes and barrier islands. <em>Coastal Engineering, 56(11–12), 1133–1152</em>. <a href="https://doi.org/10.1016/j.coastaleng.2009.08.006">10.1016/j.coastaleng.2009.08.006</a>.</li>
+<li><strong>E06</strong> · Kopp et al. (2014). Probabilistic 21st and 22nd century sea-level projections at a global network of tide-gauge sites. <em>Earth’s Future, 2(8), 383–406</em>. <a href="https://doi.org/10.1002/2014EF000239">10.1002/2014EF000239</a>.</li>
+<li><strong>E07</strong> · Muis et al. (2016). A global reanalysis of storm surges and extreme sea levels. <em>Nature Communications, 7, 11969</em>. <a href="https://doi.org/10.1038/ncomms11969">10.1038/ncomms11969</a>.</li>
+<li><strong>E08</strong> · Clough, Polaczyk &amp; Propato (2016). Modeling the potential effects of sea-level rise on the coast of New York: Integrating mechanistic accretion and stochastic uncertainty. <em>Environmental Modelling &amp; Software, 84, 349–362</em>. <a href="https://doi.org/10.1016/j.envsoft.2016.06.023">10.1016/j.envsoft.2016.06.023</a>.</li>
+<li><strong>E09</strong> · Vitousek et al. (2017a). Doubling of coastal flooding frequency within decades due to sea-level rise. <em>Scientific Reports, 7, 1399</em>. <a href="https://doi.org/10.1038/s41598-017-01362-7">10.1038/s41598-017-01362-7</a>.</li>
+<li><strong>E10</strong> · Vitousek et al. (2017b). A model integrating longshore and cross-shore processes for predicting long-term shoreline response to climate change. <em>Journal of Geophysical Research: Earth Surface, 122(4), 782–806</em>. <a href="https://doi.org/10.1002/2016JF004065">10.1002/2016JF004065</a>.</li>
+<li><strong>E11</strong> · Vousdoukas et al. (2018). Global probabilistic projections of extreme sea levels show intensification of coastal flood hazard. <em>Nature Communications, 9, 2360</em>. <a href="https://doi.org/10.1038/s41467-018-04692-w">10.1038/s41467-018-04692-w</a>.</li>
+<li><strong>E12</strong> · Schuerch et al. (2018). Future response of global coastal wetlands to sea-level rise. <em>Nature, 561, 231–234</em>. <a href="https://doi.org/10.1038/s41586-018-0476-5">10.1038/s41586-018-0476-5</a>.</li>
+<li><strong>E13</strong> · Kulp &amp; Strauss (2019). New elevation data triple estimates of global vulnerability to sea-level rise and coastal flooding. <em>Nature Communications, 10, 4844</em>. <a href="https://doi.org/10.1038/s41467-019-12808-z">10.1038/s41467-019-12808-z</a>.</li>
+<li><strong>E14</strong> · Vos et al. (2019). CoastSat: A Google Earth Engine-enabled Python toolkit to extract shorelines from publicly available satellite imagery. <em>Environmental Modelling &amp; Software, 122, 104528</em>. <a href="https://doi.org/10.1016/j.envsoft.2019.104528">10.1016/j.envsoft.2019.104528</a>.</li>
+<li><strong>E15</strong> · Vousdoukas et al. (2020). Sandy coastlines under threat of erosion. <em>Nature Climate Change, 10, 260–263</em>. <a href="https://doi.org/10.1038/s41558-020-0697-0">10.1038/s41558-020-0697-0</a>.</li>
+<li><strong>E16</strong> · Tiggeloven et al. (2020). Global-scale benefit–cost analysis of coastal flood adaptation to different flood risk drivers using structural measures. <em>Natural Hazards and Earth System Sciences, 20, 1025–1044</em>. <a href="https://doi.org/10.5194/nhess-20-1025-2020">10.5194/nhess-20-1025-2020</a>.</li>
+<li><strong>E17</strong> · Leijnse, van Ormondt, Nederhoff &amp; van Dongeren (2021). Modeling compound flooding in coastal systems using a computationally efficient reduced-physics solver: Including fluvial, pluvial, tidal, wind- and wave-driven processes. <em>Coastal Engineering, 163, 103796</em>. <a href="https://doi.org/10.1016/j.coastaleng.2020.103796">10.1016/j.coastaleng.2020.103796</a>.</li>
+<li><strong>E18</strong> · Shaw et al. (2021). LISFLOOD-FP 8.0: the new discontinuous Galerkin shallow-water solver for multi-core CPUs and GPUs. <em>Geoscientific Model Development, 14, 3577–3602</em>. <a href="https://doi.org/10.5194/gmd-14-3577-2021">10.5194/gmd-14-3577-2021</a>.</li>
+<li><strong>E19</strong> · Hawker et al. (2022). A 30 m global map of elevation with forests and buildings removed. <em>Environmental Research Letters, 17, 024016</em>. <a href="https://doi.org/10.1088/1748-9326/ac4d4f">10.1088/1748-9326/ac4d4f</a>.</li>
+<li><strong>E20</strong> · Kopp, Garner et al. (2023). The Framework for Assessing Changes To Sea-level (FACTS) v1.0: a platform for characterizing parametric and structural uncertainty in future global, relative, and extreme sea-level change. <em>Geoscientific Model Development, 16, 7461–7489</em>. <a href="https://doi.org/10.5194/gmd-16-7461-2023">10.5194/gmd-16-7461-2023</a>.</li>
+<li><strong>E21</strong> · Toste, Vasconcelos, Assad &amp; Landau (2024). Dynamically downscaled coastal flooding in Brazil’s Guanabara Bay under a future climate change scenario. <em>Natural Hazards, 120, 7845–7869</em>. <a href="https://doi.org/10.1007/s11069-024-06556-7">10.1007/s11069-024-06556-7</a>.</li>
+<li><strong>E22</strong> · I. B. Emmendorfer et al. (2024). Accuracy assessment of global DEMs for the mapping of coastal flooding on a low-lying sandy environment: Cassino Beach, Brazil. <em>Regional Studies in Marine Science, 103535</em>. <a href="https://doi.org/10.1016/j.rsma.2024.103535">10.1016/j.rsma.2024.103535</a>.</li>
+<li><strong>E23</strong> · Ohenhen et al. (2026). Global subsidence of river deltas. <em>Nature, 649, 894–901</em>. <a href="https://doi.org/10.1038/s41586-025-09928-6">10.1038/s41586-025-09928-6</a>.</li>
+<li><strong>E24</strong> · Seeger &amp; Minderhoud (2026). Sea level much higher than assumed in most coastal hazard assessments. <em>Nature, 652, 667–674</em>. <a href="https://doi.org/10.1038/s41586-026-10196-1">10.1038/s41586-026-10196-1</a>.</li>
+<li><strong>E25</strong> · Cotrim et al. (2026). Pan-European assessment of coastal flood hazards. <em>Natural Hazards and Earth System Sciences, 26, 1859–1881</em>. <a href="https://doi.org/10.5194/nhess-26-1859-2026">10.5194/nhess-26-1859-2026</a>.</li>
+<li><strong>E26</strong> · Ricondo et al. (2026). HyFlood: A surrogate-model-based framework for compound coastal flooding. <em>Coastal Engineering, 105124</em>. <a href="https://doi.org/10.1016/j.coastaleng.2026.105124">10.1016/j.coastaleng.2026.105124</a>.</li>
+<li><strong>E27</strong> · Hinkel et al. (2014). Coastal flood damage and adaptation costs under 21st century sea-level rise. <em>Proceedings of the National Academy of Sciences, 111(9), 3292–3297</em>. <a href="https://doi.org/10.1073/pnas.1222469111">10.1073/pnas.1222469111</a>.</li>
+<li><strong>E28</strong> · Gharehtoragh &amp; Johnson (2024). Using surrogate modeling to predict storm surge on evolving landscapes under climate change. <em>npj Natural Hazards, 1, 33</em>. <a href="https://doi.org/10.1038/s44304-024-00032-9">10.1038/s44304-024-00032-9</a>.</li>
+<li><strong>E29</strong> · Xu, Ma, Song, Ye, Xiao &amp; Huang (2026). Public-service exposure-oriented coastal flood susceptibility assessment and priority zone identification in the Pearl River Estuary. <em>Frontiers in Marine Science, 13, 1948057</em>. <a href="https://doi.org/10.3389/fmars.2026.1948057">10.3389/fmars.2026.1948057</a>.</li>
+<li><strong>E30</strong> · Pronk et al. (2024). DeltaDTM: A global coastal digital terrain model. <em>Scientific Data, 11, 273</em>. <a href="https://doi.org/10.1038/s41597-024-03091-9">10.1038/s41597-024-03091-9</a>.</li>
+</ul>
+<h3>Avaliações, projeções e referências complementares</h3>
+<ul>
+<li>Church, J. A., et al. (2013). Sea Level Change. In <em>Climate Change 2013: The Physical Science Basis</em>, cap. 13. Cambridge University Press. <a href="https://doi.org/10.1017/CBO9781107415324.026">10.1017/CBO9781107415324.026</a>, <a href="https://www.ipcc.ch/pdf/assessment-report/ar5/wg1/WG1AR5_Chapter13_FINAL.pdf">documento oficial do AR5</a>.</li>
+<li>Eyring, V., Bony, S., Meehl, G. A., Senior, C. A., Stevens, B., Stouffer, R. J., &amp; Taylor, K. E. (2016). Overview of the Coupled Model Intercomparison Project Phase 6 (CMIP6) experimental design and organization. <em>Geoscientific Model Development</em>, 9, 1937–1958. <a href="https://doi.org/10.5194/gmd-9-1937-2016">10.5194/gmd-9-1937-2016</a>.</li>
+<li>Fox-Kemper, B., et al. (2021). Ocean, Cryosphere and Sea Level Change. In <em>Climate Change 2021: The Physical Science Basis</em>, cap. 9. Cambridge University Press. <a href="https://doi.org/10.1017/9781009157896.011">10.1017/9781009157896.011</a>, <a href="https://ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter09.pdf">documento oficial do AR6</a>.</li>
+<li>Garner, G. G., et al. (2021). <em>IPCC AR6 Sea Level Projections</em> [dados]. Zenodo. <a href="https://doi.org/10.5281/zenodo.6382554">10.5281/zenodo.6382554</a>.</li>
+<li>IPCC (2021). Summary for Policymakers. In <em>Climate Change 2021: The Physical Science Basis</em>. <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/summary-for-policymakers/">Sumário oficial</a>.</li>
+<li>Oppenheimer, M., et al. (2019). Sea Level Rise and Implications for Low-Lying Islands, Coasts and Communities. In <em>IPCC Special Report on the Ocean and Cryosphere in a Changing Climate</em>, cap. 4. <a href="https://www.ipcc.ch/srocc/chapter/chapter-4-sea-level-rise-and-implications-for-low-lying-islands-coasts-and-communities/">Capítulo oficial</a>.</li>
+<li>Ranasinghe, R., Callaghan, D., &amp; Stive, M. J. F. (2012). Estimating coastal recession due to sea level rise: beyond the Bruun rule. <em>Climatic Change</em>, 110, 561–574. <a href="https://doi.org/10.1007/s10584-011-0107-8">10.1007/s10584-011-0107-8</a>.</li>
+<li>Seeger, K., &amp; Minderhoud, P. S. J. (2026). Addendum: Sea level much higher than assumed in most coastal hazard assessments. <em>Nature</em>, 657, E8–E14. <a href="https://doi.org/10.1038/s41586-026-11017-1">10.1038/s41586-026-11017-1</a>.</li>
+<li>Sweet, W. V., et al. (2022). <em>Global and Regional Sea Level Rise Scenarios for the United States</em>. NOAA Technical Report NOS 01. <a href="https://cdn.oceanservice.noaa.gov/oceanserviceprod/hazards/sealevelrise/noaa-nos-techrpt01-global-regional-SLR-scenarios-US.pdf">Relatório oficial</a>.</li>
+</ul>
+
+</main></body></html>

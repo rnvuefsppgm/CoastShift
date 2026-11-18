@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec.bak
+dados_bahia/
+coastshift_selftest.log
+build_log.txt
