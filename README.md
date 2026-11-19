@@ -24,7 +24,8 @@ O3–O5 são implementações **reduzidas** para triagem e ensino da cadeia de p
 CoastShift/
 ├── app.py                      interface gráfica (Tkinter + Matplotlib)
 ├── coastshift/                 biblioteca: io, core (equações), models (O1–O5), validation, demo
-├── scripts/                    01–13: aquisição GEE/Colab/Python → pacotes → lote
+├── scripts/                    V1 01–13: aquisição GEE/Colab/Python → pacotes → lote
+├── scripts_v2/                 V2 00–20: download direto sem GEE → pacotes O2
 │   └── notebooks/              versões .ipynb para o Google Colab
 ├── docs/
 │   ├── 00_PLANO_ECONOMIA_TOKENS.md
@@ -48,7 +49,17 @@ python app.py
 python tests/test_smoke.py
 ```
 
-## Sequência de processamento dos dados reais (Bahia)
+## Fluxo V2 — download direto, sem GEE e sem login (recomendado)
+
+A pasta [`scripts_v2/`](scripts_v2/README.md) baixa **todas as variáveis do Modelo 2** para a zona costeira da Bahia por download direto (IBGE, AWS, Bristol, API MapBiomas, JRC, Microsoft, Zenodo, UHSLC, Open-Meteo, SlideRule, PROJ), com scripts independentes, e monta os pacotes do O2:
+
+```bash
+cd scripts_v2
+python 00_baixar_tudo.py
+python 20_montar_pacotes_O2.py --dem fabdem --nmm-sgb <valor>
+```
+
+## Sequência de processamento dos dados reais (Bahia) — fluxo V1 (GEE)
 
 | # | Script | Ambiente | O que faz |
 |---|---|---|---|

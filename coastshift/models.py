@@ -72,42 +72,70 @@ def run_o1(pkg, opt, progress=_noop):
 
 
 # ======================================================================= O2
-def run_o2(pkg, opt, progress=_noop):
+def o2_realizacoes(pkg, opt, n, seed, progress=_noop):
+    """Bloco de n realizações do O2 (Eqs. 4–14c). Em cada realização sorteiam-se u_k (AR6, comonotônico), o evento
+    de referência e o campo de erro do DEM uma única vez; o bathtub conectado é avaliado para cada SSP × ano.
+    Retorna contagens (uint16) só nas células válidas e as exposições de cada realização."""
     p = pkg.params
-    rng = np.random.default_rng(opt.get("seed", 42))
-    n = int(opt.get("n", 200))
+    rng = np.random.default_rng(seed)
     bias, sd = core.dem_error_maps(pkg.layers["landcover"], p.get("dem_error", {}))
     corr = p.get("dem_error", {}).get("corr_length_m", 300.0) / pkg.cell
+    jobs = [tuple(j) for j in opt["jobs"]] if opt.get("jobs") else [(s, y) for s in opt["ssps"] for y in opt["years"]]
+    valid = np.isfinite(pkg.dem)
+    vidx = np.flatnonzero(valid)
+    count = {jb: np.zeros(vidx.size, "uint16") for jb in jobs}
+    totals = {jb: [] for jb in jobs}
+    a_ha = pkg.cell ** 2 / 1e4
+    pop = np.nan_to_num(pkg.layers["pop"]).ravel()
+    bld = np.nan_to_num(pkg.layers["buildings"]).ravel()
+    mang = np.isin(pkg.layers["landcover"], p.get("habitat", {}).get("mangrove_classes", [5])).ravel()
+    for k in range(n):
+        u = rng.uniform()
+        base = core.sea_level_event(p, opt.get("ref", "MHWS"), opt.get("tr", 0), rng=rng,
+                                    with_setup=opt.get("setup", False), amp=opt.get("amp", 1.0))
+        eps = core.correlated_field(pkg.dem.shape, corr, rng)
+        z = pkg.dem - bias - sd * eps                                      # Eq. 11
+        for jb in jobs:
+            wet = core.connected_flood(z, base + core.delta_rsl(p, jb[0], jb[1], u), pkg.sea,
+                                       opt.get("conn", 8)).ravel()        # Eqs. 13–14
+            count[jb] += wet[vidx]
+            idx = np.flatnonzero(wet)
+            totals[jb].append({"area_ha": idx.size * a_ha, "populacao": float(pop[idx].sum()),
+                               "edificacoes": float(bld[idx].sum()), "mangue_ha": float(mang[idx].sum() * a_ha)})
+        if k % 5 == 0:
+            progress(k / n, f"realização {k}/{n}")
+    return count, totals
+
+
+def o2_resultado(pkg, opt, count, totals, n):
+    """Monta camadas (probabilidade, erro-padrão) e a tabela de exposição a partir das contagens."""
     res = Result(meta={"modelo": "O2", **opt})
-    jobs = [(s, y) for s in opt["ssps"] for y in opt["years"]]
-    for j, (ssp, yr) in enumerate(jobs):
-        count = np.zeros(pkg.dem.shape, "float32")
-        totals = []
-        for k in range(n):
-            u = rng.uniform()
-            d = core.delta_rsl(p, ssp, yr, u)
-            base = core.sea_level_event(p, opt.get("ref", "MHWS"), opt.get("tr", 0), rng=rng,
-                                        with_setup=opt.get("setup", False), amp=opt.get("amp", 1.0))
-            eps = core.correlated_field(pkg.dem.shape, corr, rng)
-            z = pkg.dem - bias - sd * eps                      # Eq. 11
-            wet = core.connected_flood(z, base + d, pkg.sea, opt.get("conn", 8))
-            count += wet
-            totals.append(_exposure(pkg, wet))
-            if k % 10 == 0:
-                progress((j + k / n) / len(jobs), f"{ssp} {yr}: {k}/{n}")
-        prob = count / n
+    p, a_ha = pkg.params, pkg.cell ** 2 / 1e4
+    vidx = np.flatnonzero(np.isfinite(pkg.dem))
+    for (ssp, yr), c in count.items():
+        prob = np.full(pkg.dem.size, np.nan, "float32")
+        prob[vidx] = c / n
+        prob = prob.reshape(pkg.dem.shape)
+        prob[pkg.sea] = 0.0
         key = f"{ssp}_{yr}"
-        res.layers[f"probabilidade_{key}"] = np.where(np.isnan(pkg.dem) & ~pkg.sea, np.nan, prob)
+        res.layers[f"probabilidade_{key}"] = prob
         res.layers[f"erro_padrao_MC_{key}"] = np.sqrt(prob * (1 - prob) / n).astype("float32")
-        row = {"cenario": ssp, "ano": yr, "N": n,
-               "dRSL_p50_m": round(float(core.delta_rsl(p, ssp, yr, 0.5)), 3)}
+        row = {"cenario": ssp, "ano": yr, "N": n, "dRSL_p50_m": round(float(core.delta_rsl(p, ssp, yr, 0.5)), 3)}
         for var in ("area_ha", "populacao", "edificacoes", "mangue_ha"):
-            v = np.array([t[var] for t in totals])
+            v = np.array([t[var] for t in totals[(ssp, yr)]])
             row[f"{var}_media"] = round(float(v.mean()), 1)
             row[f"{var}_p05"] = round(float(np.percentile(v, 5)), 1)
             row[f"{var}_p95"] = round(float(np.percentile(v, 95)), 1)
-        row["area_ha_p>=0.5"] = round(float((prob >= 0.5).sum() * pkg.cell ** 2 / 1e4), 1)
+        row["area_ha_p>=0.5"] = round(float((np.nan_to_num(prob) >= 0.5).sum() * a_ha), 1)
         res.table.append(row)
+    return res
+
+
+def run_o2(pkg, opt, progress=_noop):
+    """O2 – estático probabilístico (Monte Carlo)."""
+    n = int(opt.get("n", 200))
+    count, totals = o2_realizacoes(pkg, opt, n, opt.get("seed", 42), progress)
+    res = o2_resultado(pkg, opt, count, totals, n)
     progress(1.0, "O2 concluído")
     return res
 
@@ -137,7 +165,7 @@ def inertial_solver(z, sea, cell, manning, level_fn, t_end, rain_mmh=0.0, alpha=
         h[sea] = np.maximum(lvl - z[sea], 0.0)
         eta = z + h
         land_h = h[~sea].max() if (~sea).any() else 0.0
-        dt = min(alpha * cell / np.sqrt(G_ * max(land_h, lvl - zmin_land, 0.05)), 60.0)
+        dt = min(alpha * cell / np.sqrt(G_ * max(land_h, float(h.max()), lvl - zmin_land, 0.05)), 60.0)  # CFL em todo o domínio
         # faces x
         hf = np.maximum(np.maximum(eta[:, :-1], eta[:, 1:]) - np.maximum(z[:, :-1], z[:, 1:]), 0.0)
         s = (eta[:, 1:] - eta[:, :-1]) / cell

@@ -61,12 +61,18 @@ def stockdon_setup(hs, tp, beta):
 # ---------------------------------------------------------------- erro do DEM
 def correlated_field(shape, corr_cells, rng):
     """Campo gaussiano de média 0 e variância 1 com correlação espacial (Eq. 12)."""
-    f = rng.standard_normal(shape).astype("float32")
+    # Para ℓ ≥ 6 células o campo é gerado numa grade k vezes mais grossa (k = ℓ/3) e interpolado
+    # bilinearmente: a estrutura de correlação (escala ℓ) é preservada e o custo cai ~k².
+    k = int(corr_cells // 3) if corr_cells >= 6 else 1
+    cshape = tuple(int(np.ceil(n / k)) + 1 for n in shape)
+    f = rng.standard_normal(cshape).astype("float32")
     if corr_cells > 0.5:
-        f = ndimage.gaussian_filter(f, sigma=corr_cells, mode="reflect")
-        s = f.std()
-        f = f / s if s > 0 else f
-    return f
+        f = ndimage.gaussian_filter(f, sigma=corr_cells / k, mode="reflect")
+    if k > 1:
+        f = ndimage.zoom(f, k, order=1)
+    f = f[:shape[0], :shape[1]]
+    s = f.std()
+    return f / s if s > 0 else f
 
 
 def dem_error_maps(landcover, dem_error):
@@ -90,6 +96,20 @@ def connected_flood(z, level, sea, conn=8):
     ids = np.unique(lab[sea & (lab > 0)])
     ids = ids[ids > 0]
     return np.isin(lab, ids) & ~sea
+
+
+def spill_levels(z, sea, conn=8):
+    """Cota de transbordamento: menor nível d'água que conecta cada célula ao mar (mínimo, sobre os caminhos
+    a partir de S, da cota máxima ao longo do caminho). Reconstrução morfológica por erosão (Vincent, 1993).
+    Para qualquer nível η: {spill ≤ η} = connected_flood(z, η, sea, conn) (Eqs. 13–14), de forma exata."""
+    from skimage.morphology import reconstruction
+    big = np.float32(1e6)
+    mask = np.where(sea, -big, np.where(np.isfinite(z), z, big)).astype("float32")
+    seed = np.where(sea, -big, big).astype("float32")
+    fp = np.ones((3, 3), bool) if conn == 8 else ndimage.generate_binary_structure(2, 1)
+    r = reconstruction(seed, mask, method="erosion", footprint=fp)
+    r[sea] = np.inf
+    return r
 
 
 def water_reference(params, kind):

@@ -7,4 +7,4 @@ Modelos:
   O4  costa e habitats (Bruun + quadro de maré para manguezal + inundação amplificada)
   O5  integrado probabilístico (biblioteca O3 + emulador + danos/EAD)
 """
-__version__ = "1.0.0"
+__version__ = "1.0.1"

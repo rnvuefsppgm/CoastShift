@@ -233,6 +233,8 @@ No QGIS: arraste os `.tif`; para probabilidade use a rampa *Singleband pseudocol
 
 ## 7. Pipeline de dados reais: scripts 01 a 13
 
+> **Alternativa recomendada: fluxo V2** ([`scripts_v2/README.md`](../scripts_v2/README.md)) — baixa todas as variáveis do O2 sem GEE, sem tasks e sem contas (CDS/Earthdata), com scripts independentes (`python 00_baixar_tudo.py`) e monta os pacotes (`python 20_montar_pacotes_O2.py`). O fluxo V1 abaixo continua válido.
+
 ### 7.1 Antes de começar
 
 **Contas gratuitas:**
