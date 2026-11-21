@@ -198,7 +198,7 @@ if __name__ == "__main__":
     pt = open(os.path.join(ART, "PT", "manuscrito_PT.md"), encoding="utf-8").read()
     metodos = pt[pt.index("# 3. Escolha do modelo"):pt.index("# 5. Resultados")].replace("../figuras/", "../01_artigo/figuras/")
     metodos = metodos.replace("\n# ", "\n## ").replace("\n## 3. Escolha", "\n## 3. Escolha")
-    revisao_md = pypandoc.convert_file(os.path.join(AM, "Revisao_cientifica_nivel_do_mar.html"), "markdown", format="html")
+    revisao_md = pypandoc.convert_file(os.path.join(AM, "00_revisao_inicial", "Revisao_cientifica_nivel_do_mar.html"), "markdown", format="html")
     revisao_md = "\n".join(("#" + l if l.startswith("#") else l) for l in revisao_md.splitlines())
     corpo = (open(os.path.join(D2, "parte1_decisoes.md"), encoding="utf-8").read()
              + "\n\n# Parte II — Metodologia detalhada (Modelo O2 e fluxo V2)\n\n" + metodos

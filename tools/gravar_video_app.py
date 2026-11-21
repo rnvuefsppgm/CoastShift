@@ -135,7 +135,7 @@ def enquadrar(shot, texto):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--pacote", default=os.path.join(os.path.dirname(REPO), "dados_bahia_v2", "pacotes", "S2_Salvador_BTS"))
-    ap.add_argument("--saida", default=os.path.join(os.path.dirname(REPO), "video_app"))
+    ap.add_argument("--saida", default=os.path.join(os.path.dirname(REPO), "entregas", "08_video_app"))
     ap.add_argument("--n", type=int, default=30)
     a = ap.parse_args()
     tmp = os.path.join(a.saida, "_tmp")

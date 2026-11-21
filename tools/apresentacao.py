@@ -211,7 +211,7 @@ s.shapes.add_picture(APP, Inches(0.5), Inches(1.7), width=Inches(7.6))
 texto(s, 8.4, 1.9, 4.7, 5.4, ["1. Aba Dados → abrir o pacote do setor", "2. Aba Parâmetros → conferir maré, AR6, erro do DEM",
                               "3. Aba Modelo → O2, SSPs, anos, MHWS, N = 500", "4. Executar → mapa e tabela de exposição",
                               "5. Aba Validação → DEM com ICESat-2, mancha observada", "6. Exportar → GeoTIFF + CSV + metadados",
-                              "Vídeo: video_app/CoastShift_demo_Modelo2_Bahia.mp4"], 16)
+                              "Vídeo: entregas/08_video_app/CoastShift_demo_Modelo2_Bahia.mp4"], 16)
 # 16 — lote e scripts
 n += 1
 s = prs.slides.add_slide(BL)
