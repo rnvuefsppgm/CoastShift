@@ -57,12 +57,19 @@ def agua_s1(itens, prof):
         ok = np.isfinite(vv) & (vv > 0)
         soma[ok] += vv[ok]
         cont[ok] += 1
+    if not cont.any():
+        raise RuntimeError("nenhuma cena Sentinel-1 lida")
     g = np.where(cont > 0, soma / np.maximum(cont, 1), np.nan)
     db = 10 * np.log10(np.where(g > 0, g, np.nan))
     return np.nan_to_num(db < LIMIAR_DB), np.isfinite(db)
 
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--setores", default="", help="refaz só estes setores (vírgula) e mescla com o CSV existente")
+    a = ap.parse_args()
+    alvo = [x for x in a.setores.split(",") if x] or list(_v2.SETORES)
     import planetary_computer
     import pystac_client
     cat = pystac_client.Client.open(v25.STAC, modifier=planetary_computer.sign_inplace)
@@ -71,7 +78,7 @@ if __name__ == "__main__":
     sv = (_v2.serie_uhslc(708, ("b",), fast=True) - sal["nmm_zero_estacao_m"]).dropna()
     _, gs = _v2.aoi()
     linhas, conf = [], []
-    for setor in _v2.SETORES:
+    for setor in alvo:
         pk = csio.Package(os.path.join(_v2.BASE, "pacotes", setor))
         prof = pk.profile
         its = list(cat.search(collections=["sentinel-1-rtc"], bbox=list(gs[gs.setor == setor].total_bounds),
@@ -97,8 +104,12 @@ if __name__ == "__main__":
         d_bx, d_al = cc.dia.iloc[0], cc.dia.iloc[-1]
         n_bx, n_al = float(cc.nivel.iloc[0]), float(cc.nivel.iloc[-1])
         d = df[df.orbita == orb]
-        w_al, ok_al = agua_s1(d[d.dia == d_al].item, prof)
-        w_bx, ok_bx = agua_s1(d[d.dia == d_bx].item, prof)
+        try:
+            w_al, ok_al = agua_s1(d[d.dia == d_al].item, prof)
+            w_bx, ok_bx = agua_s1(d[d.dia == d_bx].item, prof)
+        except RuntimeError as e:
+            _v2.log(f"S1 intermaré {setor}: {e}; setor não avaliado (rode de novo com --setores {setor})")
+            continue
         terra = np.isfinite(pk.dem) & ~pk.sea
         with rasterio.open(_v2.p("agua", f"gsw_ocorrencia_{setor}.tif")) as g:
             perm = g.read(1) >= 50
@@ -128,15 +139,25 @@ if __name__ == "__main__":
         _v2.log(f"S1 intermaré {setor}: {n_bx:.2f}→{n_al:.2f} m (MHWS {mares[setor]['mhws']:.2f}), CSI {m['CSI']:.2f} "
                 f"(sem mangue {m2['CSI']:.2f}), HR {m['HR']:.2f}, FAR {m['FAR']:.2f}, obs {int(obs.sum())} células")
     dd = pd.DataFrame(linhas)
+    cf = pd.DataFrame(conf)
+    fm, fc = os.path.join(OUT, "s1_intermare_metricas.csv"), os.path.join(OUT, "s1_intermare_confiabilidade.csv")
+    if a.setores and os.path.exists(fm):
+        old = pd.read_csv(fm)
+        old = old[(old.setor != "TOTAL") & ~old.setor.isin(dd.setor) & (old.n_celulas > 0)]
+        dd = pd.concat([old, dd], ignore_index=True)
+        dd["_o"] = dd.setor.map({k: i for i, k in enumerate(_v2.SETORES)})
+        dd = dd.sort_values("_o").drop(columns="_o").reset_index(drop=True)
+        if os.path.exists(fc):
+            oc = pd.read_csv(fc)
+            cf = pd.concat([oc[~oc.setor.isin(cf.setor if len(cf) else [])], cf], ignore_index=True)
     t = {k: int(dd[k].sum()) for k in ("TP", "FP", "FN", "n_celulas")}
     t.update(setor="TOTAL", CSI=t["TP"] / max(t["TP"] + t["FP"] + t["FN"], 1), HR=t["TP"] / max(t["TP"] + t["FN"], 1),
              FAR=t["FP"] / max(t["TP"] + t["FP"], 1), vies_area=(t["TP"] + t["FP"]) / max(t["TP"] + t["FN"], 1),
-             Brier=float(np.average(dd.Brier, weights=dd.n_celulas)))
+             Brier=float(np.average(dd.Brier.fillna(0), weights=dd.n_celulas.where(dd.Brier.notna(), 0))))
     t2 = {k: int(dd[f"sem_mangue_{k}"].sum()) for k in ("TP", "FP", "FN")}
     t.update(sem_mangue_CSI=t2["TP"] / max(t2["TP"] + t2["FP"] + t2["FN"], 1),
              sem_mangue_HR=t2["TP"] / max(t2["TP"] + t2["FN"], 1), sem_mangue_FAR=t2["FP"] / max(t2["TP"] + t2["FP"], 1))
-    pd.concat([dd, pd.DataFrame([t])], ignore_index=True).round(3).to_csv(
-        os.path.join(OUT, "s1_intermare_metricas.csv"), index=False, encoding="utf-8-sig")
-    pd.DataFrame(conf).to_csv(os.path.join(OUT, "s1_intermare_confiabilidade.csv"), index=False, encoding="utf-8-sig")
+    pd.concat([dd, pd.DataFrame([t])], ignore_index=True).round(3).to_csv(fm, index=False, encoding="utf-8-sig")
+    cf.to_csv(fc, index=False, encoding="utf-8-sig")
     _v2.log(f"S1 intermaré TOTAL: CSI {t['CSI']:.2f} (sem mangue {t['sem_mangue_CSI']:.2f}), HR {t['HR']:.2f}, "
             f"FAR {t['FAR']:.2f}, Brier {t['Brier']:.3f}")

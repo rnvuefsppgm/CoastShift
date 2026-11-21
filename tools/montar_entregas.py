@@ -138,7 +138,7 @@ if __name__ == "__main__":
         shutil.copy(f, os.path.join(SUP, "tabelas"))
     for f in glob.glob(os.path.join(RES, "validacao", "*.csv")) + glob.glob(os.path.join(RES, "validacao", "*.json")):
         shutil.copy(f, os.path.join(SUP, "validacao"))
-    for f in ("Fig_municipios_top15", "Fig_incerteza", "Fig_convergencia"):
+    for f in ("Fig_municipios_top15", "Fig_incerteza", "Fig_convergencia", "Fig_validacao_s1_acerto"):
         if os.path.exists(os.path.join(RES, "graficos", f + ".png")):
             shutil.copy(os.path.join(RES, "graficos", f + ".png"), FIG)
     mun = pd.read_csv(os.path.join(RES, "tabelas", "municipios_O2.csv"))
@@ -179,6 +179,7 @@ if __name__ == "__main__":
                (tabela_md(tval, [c for c in ["setor", "n_pares", "TP", "FP", "FN", "CSI", "HR", "FAR", "Brier", "sem_mangue_CSI"] if c in tval.columns]) if len(tval) else ""),
                L("Sentinel-1: 18 high/low-tide pairs (three per sector). Sentinel-2 pair diagnostics (17 pairs) are in `validacao/` (s2_multipares_metricas.csv, s2_multipares_por_par.csv).",
                  "Sentinel-1: 18 pares de preamar e baixa-mar (três por setor). Os diagnósticos do Sentinel-2 (17 pares) estão em `validacao/` (s2_multipares_metricas.csv, s2_multipares_por_par.csv)."),
+               f"![{L('Figure S6. Hits, false alarms and misses of tidal inundation in the Sentinel-1 pairs (three per sector; p ≥ 0.5), with the mangrove outline (MapBiomas class 5). Cells combine the three pairs (hit if a true positive in any pair; miss if a false negative and never a hit; false alarm otherwise); display aggregated with priority hit > miss > false alarm; counts at native 30 m resolution match the validation table exactly. Most false alarms fall in mangroves (78 % in S2, 68 % in S4, 46–48 % in S3 and S6). Script 25f.', 'Figura S6. Acertos, falsos alarmes e omissões da inundação pela maré nos pares Sentinel-1 (três por setor; p ≥ 0,5), com o contorno do mangue (MapBiomas, classe 5). Cada célula combina os três pares (acerto, se VP em algum par; omissão, se FN e nunca VP; falso alarme nos demais casos); exibição agregada com prioridade acerto > omissão > falso alarme; as contagens na resolução de 30 m coincidem com a tabela de validação. A maior parte dos falsos alarmes cai no mangue (78 % no S2, 68 % no S4, 46–48 % no S3 e no S6). Script 25f.')}](../figuras/Fig_validacao_s1_acerto.png)",
                L("# S7. Maps", "# S7. Mapas"),
                L("All coast maps (present day and 15 scenario–horizon combinations; N = 500), sector panels, and the maps for MSL, 10- and 100-year return levels (five SSPs) and 2150 are provided as 600 dpi PNG files in `mapas_principais/` and `mapas_episodicos_2150/`. GeoTIFF probability and class rasters are reproducible with scripts 21–22.",
                  "Todos os mapas da costa (Atual e 15 combinações cenário–horizonte; N = 500), os painéis por setor e os mapas de NMM, TR 10 e 100 anos (cinco SSPs) e 2150 estão em PNG 600 dpi nas pastas `mapas_principais/` e `mapas_episodicos_2150/`. Os rasters GeoTIFF de probabilidade e classe são reproduzíveis com os scripts 21–22."),
