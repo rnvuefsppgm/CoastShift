@@ -84,6 +84,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--dem", default="fabdem", choices=["fabdem", "cop30"])
     ap.add_argument("--saida", default="", help="pasta dos pacotes (padrão <BASE>/pacotes)")
+    ap.add_argument("--ell", type=float, default=662.0,
+                    help="comprimento de correlação do erro do DEM (m); 662 = estimado pelo variograma (script 23)")
     ap.add_argument("--nmm-sgb", type=float, default=float(os.environ.get("NMM_SALVADOR_SGB_M", "nan")))
     a = ap.parse_args()
     if np.isnan(a.nmm_sgb):                          # valor calculado pelo script 14 (RMPG/IBGE)
@@ -161,7 +163,7 @@ if __name__ == "__main__":
             else:
                 avisos.append(f"{nome} ausente")
         # --- validação do DEM com ICESat-2 (mesmo datum)
-        dem_error = dict(PADRAO["dem_error"], corr_length_m=300)
+        dem_error = dict(PADRAO["dem_error"], corr_length_m=a.ell)
         f_is = _v2.p("icesat2", f"atl08_ground_{setor}.csv")
         stats = None
         if os.path.exists(f_is) and lc is not None:
@@ -176,7 +178,7 @@ if __name__ == "__main__":
             lc_val = np.where(sea, 33, lc)
             stats, de = validation.dem_vs_points(z, prof, lc_val, f_csv)
             de["by_class"].pop("33", None)
-            dem_error = dict(de, corr_length_m=300)
+            dem_error = dict(de, corr_length_m=a.ell)
             stats.to_csv(os.path.join(pasta, "validacao_dem_estatisticas.csv"), index=False)
         else:
             avisos.append("sem pontos ICESat-2: erro do DEM com valores padrão")

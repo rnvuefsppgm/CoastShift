@@ -26,7 +26,7 @@ from coastshift import io as csio, models  # noqa: E402
 OUT = os.path.join(os.environ.get("COASTSHIFT_RESULTADOS", os.path.join(os.path.dirname(_v2.REPO), "resultados_O2_Bahia")))
 SENS = os.path.join(OUT, "sensibilidade")
 VAR = {"base": {}, "dem_cop30": {"pacotes": "pacotes_cop30"}, "conectividade_4": {"conn": 4},
-       "ell_150m": {"ell": 150}, "ell_600m": {"ell": 600}, "vlm_menos1": {"vlm": -1.0}, "vlm_mais1": {"vlm": 1.0},
+       "ell_150m": {"ell": 150}, "ell_300m": {"ell": 300}, "ell_600m": {"ell": 600}, "vlm_menos1": {"vlm": -1.0}, "vlm_mais1": {"vlm": 1.0},
        "amp_0.9_S2": {"amp": 0.9, "so": "S2_Salvador_BTS"}, "amp_1.1_S2": {"amp": 1.1, "so": "S2_Salvador_BTS"}}
 
 

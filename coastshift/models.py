@@ -2,6 +2,8 @@
 de opções e devolve Result(layers, table, meta). Equações: docs/01_Metodos_Opcao2_Bahia.md."""
 from dataclasses import dataclass, field
 
+import os
+
 import numpy as np
 from scipy import ndimage
 
@@ -79,7 +81,7 @@ def o2_realizacoes(pkg, opt, n, seed, progress=_noop):
     p = pkg.params
     rng = np.random.default_rng(seed)
     bias, sd = core.dem_error_maps(pkg.layers["landcover"], p.get("dem_error", {}))
-    corr = p.get("dem_error", {}).get("corr_length_m", 300.0) / pkg.cell
+    corr = float(os.environ.get("COASTSHIFT_ELL") or p.get("dem_error", {}).get("corr_length_m", 300.0)) / pkg.cell  # ℓ (m)
     jobs = [tuple(j) for j in opt["jobs"]] if opt.get("jobs") else [(s, y) for s in opt["ssps"] for y in opt["years"]]
     valid = np.isfinite(pkg.dem)
     vidx = np.flatnonzero(valid)
@@ -89,12 +91,20 @@ def o2_realizacoes(pkg, opt, n, seed, progress=_noop):
     pop = np.nan_to_num(pkg.layers["pop"]).ravel()
     bld = np.nan_to_num(pkg.layers["buildings"]).ravel()
     mang = np.isin(pkg.layers["landcover"], p.get("habitat", {}).get("mangrove_classes", [5])).ravel()
+    # Incerteza do nível de referência (opcional, COASTSHIFT_MC_NIVEL=1): NMM local ~ N(0, σ_NMM) e fator de transferência
+    # da maré f_s × N(1, σ_fs) por realização. Gerador separado, para manter pareadas as demais variáveis aleatórias.
+    inc = p.get("incerteza_nivel", {}) if os.environ.get("COASTSHIFT_MC_NIVEL") == "1" else {}
+    rng_n = np.random.default_rng([int(seed), 99])
     for k in range(n):
         u = rng.uniform()
+        d_nmm, m_fs = (rng_n.normal(0.0, inc.get("nmm_sd_m", 0.0)), rng_n.normal(1.0, inc.get("fs_sd_rel", 0.0))) if inc else (0.0, 1.0)
         base = core.sea_level_event(p, opt.get("ref", "MHWS"), opt.get("tr", 0), rng=rng,
-                                    with_setup=opt.get("setup", False), amp=opt.get("amp", 1.0))
+                                    with_setup=opt.get("setup", False), amp=opt.get("amp", 1.0) * m_fs) + d_nmm
         eps = core.correlated_field(pkg.dem.shape, corr, rng)
-        z = pkg.dem - bias - sd * eps                                      # Eq. 11
+        fc = float(p.get("dem_error", {}).get("frac_correlated", 1.0))     # parte correlacionada da variância (pepita = 1 − fc)
+        if fc < 1.0:
+            eps = np.sqrt(fc) * eps + np.sqrt(1.0 - fc) * rng.standard_normal(pkg.dem.shape).astype("float32")
+        z = pkg.dem - bias - sd * float(p.get("dem_error", {}).get("sd_scale", 1.0)) * eps   # Eq. 11
         for jb in jobs:
             wet = core.connected_flood(z, base + core.delta_rsl(p, jb[0], jb[1], u), pkg.sea,
                                        opt.get("conn", 8)).ravel()        # Eqs. 13–14
