@@ -24,7 +24,10 @@ li { margin: .45rem 0; }
 .fluxo li:last-child { background: #dbeeee; }
 .fluxo li+li::before { position: absolute; left: -1.01rem; top: 50%; transform: translateY(-50%); content: '→'; color: #145763; }
 @media(max-width: 720px) { main { padding: 2rem 1.15rem 3rem; } table { display: block; overflow-x: auto; } .fluxo { grid-template-columns: 1fr; gap: 1rem; } .fluxo li { min-height: 0; } .fluxo li+li::before { content: '↓'; left: 50%; top: -.58rem; } }
-@media print { :root, main { color: #111; background: #fff; } main { padding: 0; } nav { display: none; } h2,h3 { break-after: avoid; } tr,.fluxo { break-inside: avoid; } }</style></head><body><main>
+@media print { :root, main { color: #111; background: #fff; } main { padding: 0; } nav { display: none; } h2,h3 { break-after: avoid; } tr,.fluxo { break-inside: avoid; } }</style><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}]})"></script>
+</head><body><main>
 <h1>Modelagem espacial da elevação do nível do mar</h1>
 <p><strong>Revisão crítica da literatura internacional e guia de implementação</strong><br>Literatura prioritária de 2000 a 18 de novembro de 2026 · Projeções, inundação, linha de costa, habitats e exposição</p>
 <h2>Resumo</h2>
@@ -38,6 +41,7 @@ li { margin: .45rem 0; }
 <a href="#validacao">Validação e incertezas</a>
 <a href="#fluxos">Fluxos de aplicação</a>
 <a href="#sintese">Escolha e lacunas</a>
+<a href="#aplicacao-o2">Aplicação O2 – Bahia</a>
 <a href="#referencias">Referências</a>
 </nav>
 
@@ -450,6 +454,61 @@ AND PY=(2000-2026)
 <td>Ordem por escala e lacunas do § 8</td>
 </tr>
 </tbody></table>
+<p><a id="aplicacao-o2"></a></p>
+<h2>9. Aplicação: Modelo O2 na costa da Bahia (fluxo V2)</h2>
+<p>Esta seção registra a implementação do delineamento recomendado (Opção 2, estático probabilístico) para a zona costeira da Bahia: faixa terrestre de 15 km e marinha de 5 km a partir da linha de costa do IBGE (17.549 km², setores S1–S6, EPSG:31984, 30 m). Os dados são obtidos pelo <strong>fluxo V2</strong> do CoastShift (<code>scripts_v2</code>): 14 scripts independentes, sem tarefas no Google Earth Engine e sem contas de acesso. O manuscrito completo, em inglês e no formato de artigo, está em <code>CoastShift/docs/paper/Manuscript_O2_Bahia_SLR.docx</code>.</p>
+<h3>9.1 Fontes e acesso (fluxo V2)</h3>
+<table>
+<thead><tr><th>Variável</th><th>Base</th><th>Acesso automatizado</th></tr></thead>
+<tbody>
+<tr><td>Zona costeira e setores</td><td>Malhas territoriais IBGE</td><td>API de malhas do IBGE</td></tr>
+<tr><td>Terreno</td><td>FABDEM V1-2 (principal); Copernicus GLO-30 (alternativo)</td><td>Repositório da Univ. de Bristol (leitura direta do zip); AWS Open Data</td></tr>
+<tr><td>Cobertura da terra</td><td>MapBiomas, coleção vigente, ano 2025</td><td>API da plataforma MapBiomas (<code>/maps/export</code>)</td></tr>
+<tr><td>Água superficial</td><td>JRC GSW v1.4</td><td>Armazenamento público em nuvem</td></tr>
+<tr><td>População / edificações</td><td>GHS-POP R2023A (2025) / Microsoft Building Footprints</td><td>Servidor JRC / partições por quadkey</td></tr>
+<tr><td>ΔRSL</td><td>IPCC AR6 regional, confiança média, total</td><td>Zenodo, extração parcial do zip por HTTP Range</td></tr>
+<tr><td>Maré, NMM, extremos</td><td>Marégrafo de Salvador (UHSLC 708 / RMPG SAL)</td><td>Servidores UHSLC e IBGE (geoftp)</td></tr>
+<tr><td>Transferência de maré; ondas</td><td>Nível modelado e ERA5 (1995–2024)</td><td>API Open-Meteo Marine</td></tr>
+<tr><td>Geoide e altitude normal</td><td>EGM2008; hgeoHNOR2020 (Imbituba)</td><td>PROJ CDN; geoftp do IBGE</td></tr>
+<tr><td>Referência do DEM</td><td>ICESat-2 (fótons de terreno ATL08)</td><td>Serviço público SlideRule</td></tr>
+</tbody></table>
+<h3>9.2 Formulação</h3>
+<p><strong>Cadeia vertical.</strong> $$h = H_{EGM08} + N_{EGM08},\qquad H_N = h - \eta_{hgeoHNOR},\qquad z = H_N - \overline{NMM}_{SGB},\qquad \overline{NMM}_{SGB} = \bar r - K_1$$ em que \(\bar r\) é a média das leituras observadas da RMPG e \(K_1\) a constante da ficha de correlação dos níveis de referência. Os pontos ICESat-2 passam pela mesma cadeia.</p>
+<p><strong>Projeções e cota d&#39;água.</strong> Com amostragem comonotônica \(u_k\sim U(0,1)\): $$\Delta RSL(t;u_k) = Q_t(u_k) - Q_{2014}(u_k) - v_r\,(t-2014)/1000,\qquad \eta_k = L_{ref,k} + \Delta RSL(t;u_k) + \langle\eta\rangle\,\mathbb{1}_{aberta}$$ com \(L_{ref}\in\{NMM, MHHW, MHWS, z_T\}\), \(MHWS = A_{M2}+A_{S2}\), \(z_T = u + \tfrac{\sigma}{\xi}[(\lambda T)^{\xi}-1]\) (POT-GPD) e \(\langle\eta\rangle = 0{,}35\,\beta_f\sqrt{H_0 L_0}\).</p>
+<p><strong>Erro do DEM, conectividade e probabilidade.</strong> $$z_k = z_{DEM} - b_c - s_c\,\varepsilon_k,\quad \varepsilon_k = \frac{G_\ell * w_k}{\mathrm{sd}(G_\ell * w_k)};\qquad F_k = \bigcup\{C\in\mathcal C_8(\{z_k\le\eta_k\}\cup S): C\cap S\ne\varnothing\}\setminus S;\qquad \hat p = \frac1N\sum_k \mathbb 1_{F_k}$$ O viés \(b_c\) e o desvio \(s_c\) por classe MapBiomas vêm dos pontos ICESat-2. A exposição (área, população, edificações, mangue) é reportada como média e intervalo p05–p95 das realizações.</p>
+<h3>9.3 Caracterização dos dados e validação do DEM</h3>
+<table>
+<thead><tr><th>Grandeza</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>NMM de Salvador no SGB (2004–2024)</td><td>0,541 ± 0,090 m (K<sub>1</sub> = 6,747 m); tendência 1,65 mm/ano</td></tr>
+<tr><td>MHHW / MHWS em Salvador (rel. NMM)</td><td>0,86 / 1,10 m (A<sub>M2</sub> = 0,79 m; A<sub>S2</sub> = 0,31 m)</td></tr>
+<tr><td>Fator de transferência de maré</td><td>0,97–0,99 (S1, S3–S5); 1,27 em S6 (MHWS 1,40 m)</td></tr>
+<tr><td>Extremos POT-GPD (21,3 anos; 240 picos)</td><td>ξ = −0,43 ± 0,05; z<sub>1</sub> = 1,48 m; z<sub>10</sub> = 1,58 m; z<sub>100</sub> = 1,62 m (IC90 1,59–1,63)</td></tr>
+<tr><td>Ondas ERA5 (offshore)</td><td>H<sub>s,99</sub> 1,8–2,5 m; T<sub>p</sub> 8,1–8,9 s; setup 0,16–0,28 m</td></tr>
+<tr><td>ΔRSL AR6 em 2100, Salvador (mediana [p17–p83])</td><td>SSP1-2.6 0,45 [0,30–0,66] m; SSP2-4.5 0,58 [0,42–0,82] m; SSP5-8.5 0,78 [0,60–1,07] m</td></tr>
+<tr><td>Exposição base na zona costeira</td><td>4,65 milhões de pessoas; 0,65 milhão de edificações</td></tr>
+</tbody></table>
+<p>Erro do FABDEM frente a 1,10 milhão de segmentos de terreno ICESat-2 (viés positivo = DEM acima do terreno):</p>
+<table>
+<thead><tr><th>Classe MapBiomas</th><th>n</th><th>Viés (m)</th><th>NMAD (m)</th></tr></thead>
+<tbody>
+<tr><td>Restinga herbácea</td><td>143.762</td><td>+0,20</td><td>0,53</td></tr>
+<tr><td>Urbano</td><td>80.698</td><td>+0,19</td><td>1,54</td></tr>
+<tr><td>Praia, duna e areal</td><td>17.704</td><td>−0,05</td><td>0,90</td></tr>
+<tr><td>Pastagem</td><td>287.976</td><td>+0,85</td><td>1,03</td></tr>
+<tr><td>Área úmida</td><td>92.339</td><td>+0,76</td><td>0,76</td></tr>
+<tr><td>Mangue</td><td>80.101</td><td>+2,77</td><td>1,64</td></tr>
+<tr><td>Floresta</td><td>125.040</td><td>+3,55</td><td>3,94</td></tr>
+<tr><td>Silvicultura</td><td>83.960</td><td>+4,50</td><td>5,43</td></tr>
+</tbody></table>
+<p>O viés próximo de zero em superfícies abertas indica que a cadeia vertical está consistente no nível do decímetro. O viés residual sob dossel, sobretudo no mangue, justifica a correção por classe: sem ela, os manguezais apareceriam acima da MHWS e sua exposição seria subestimada.</p>
+<h3>9.4 Produtos, validação pendente e limitações</h3>
+<ul>
+<li><strong>Produtos:</strong> GeoTIFF de \(\hat p\) e \(se(\hat p)\) por setor × SSP × ano × nível de referência; tabelas de exposição com intervalos; metadados com semente e versões. Desenho: SSP1-2.6, SSP2-4.5, SSP5-8.5; 2030–2150; NMM, MHWS e z<sub>T</sub> (T = 1, 10, 100 anos); N ≥ 500.</li>
+<li><strong>Validação pendente:</strong> retenção de 30% dos traços ICESat-2 (blocos espaciais); manchas de preamar de sizígia em Sentinel-1/2 sincronizadas com a maré (CSI, Brier); comparação O2 × O3 nos subdomínios urbanos e estuarinos. No retroteste dos extremos, 33% dos máximos anuais excederam z<sub>2</sub> (esperado 50%).</li>
+<li><strong>Limitações:</strong> na BTS e nos estuários do Baixo Sul, as probabilidades do O2 são limites superiores (falta a atenuação hidrodinâmica); a maré e os extremos fora de Salvador são transferidos por razão modelada; a série de 21 anos limita tempos de retorno acima de ~50 anos; drenagem, comportas e morfodinâmica não estão representadas.</li>
+</ul>
+
 <p><a id="referencias"></a></p>
 <h2>Referências</h2>
 <p>As referências E01–E30 seguem os identificadores da planilha. Títulos, periódicos e DOI permitem recuperar a autoria completa e a versão de registro. Os catálogos oficiais de dados e modelos aparecem junto aos itens correspondentes das abas Bases e Modelos.</p>

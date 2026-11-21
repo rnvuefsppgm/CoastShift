@@ -119,7 +119,7 @@ for i, (c, nome, d) in enumerate(mods):
 texto(s, 0.6, 4.5, 12.2, 2.8, ["• Erro do DEM (NMAD ≈ 1,4 m) > elevação até 2050 → é preciso propagar a incerteza",
                                "• Inundação recorrente pela maré é lenta (12,42 h) → física estática conectada é adequada",
                                "• Escala: 60 mi de células × 500 realizações × 16 combinações → hidrodinâmico inviável",
-                               "• Verificação: O3 reproduz a extensão do O2 em Salvador (CSI 0,90)"], 18)
+                               "• Verificação: O3 reproduz a extensão do O2 em Salvador (CSI 0,93)"], 18)
 # 5 — fluxo
 n += 1
 s = prs.slides.add_slide(BL)
@@ -141,7 +141,7 @@ s = prs.slides.add_slide(BL)
 cabecalho(s, "Erro do relevo: por classe e correlacionado", "1,1 milhão de pontos ICESat-2; 30 % das passagens reservadas para teste", n)
 figura(s, "Fig_validacao_DEM.png", 0.5, 1.8, w=8.0)
 texto(s, 8.8, 1.9, 4.2, 5, ["• Viés bruto +1,46 m → corrigido −0,01 m", "• Mangue +2,8 m; floresta +3,8 m (dossel)",
-                            "• 64 % do erro é espacialmente correlacionado", "• ℓ estimado = 662 m",
+                            "• 64 % do erro é espacialmente correlacionado", "• ℓ = 662 m (variograma), usado na rodada",
                             "• z_k = z − b_c − s_c·ε_k (campo gaussiano)"], 17)
 # 8 — algoritmo
 n += 1
@@ -170,7 +170,7 @@ n += 1
 s = prs.slides.add_slide(BL)
 cabecalho(s, "Trajetória da área inundada", "Área esperada na costa toda, do presente a 2150", n)
 figura(s, "Fig_trajetoria_area.png", 0.5, 1.75, w=8.3)
-cartao(s, 9.2, 1.9, 3.7, 1.7, "+54 %", "de hoje a 2100 (SSP5-8.5)")
+cartao(s, 9.2, 1.9, 3.7, 1.7, "+47 %", "de hoje a 2100 (SSP5-8.5)")
 cartao(s, 9.2, 3.8, 3.7, 1.7, "+37 mil ha", "nova inundação até 2100 (SSP5-8.5)")
 # 11 — inundação adicional
 n += 1
@@ -192,8 +192,8 @@ n += 1
 s = prs.slides.add_slide(BL)
 cabecalho(s, "Robustez: sensibilidade e convergência", "Um fator por vez, sementes pareadas", n)
 figura(s, "Fig_sensibilidade.png", 0.5, 1.75, w=8.4)
-texto(s, 9.2, 2.0, 3.9, 5, ["• Nenhum fator altera > 8,2 %", "• Sinal dos cenários: +54 %", "• FABDEM × Copernicus: Jaccard 0,73–0,82",
-                            "• N = 250 × 500: < 0,1 % na costa"], 17)
+texto(s, 9.2, 2.0, 3.9, 5, ["• ℓ é o fator mais influente (600 m: −1 a −3 %)", "• Demais fatores: < 7 %; cenários: +47 %", "• FABDEM × Copernicus: Jaccard 0,69–0,82",
+                            "• N = 250 × 500: ≤ 1,5 % na costa"], 17)
 # 14 — validação
 n += 1
 s = prs.slides.add_slide(BL)
@@ -202,7 +202,7 @@ figura(s, "Fig_validacao_mare.png", 0.4, 1.75, w=7.0)
 figura(s, "Fig_O1_O2_O3_Salvador.png", 7.6, 1.75, w=5.4)
 texto(s, 7.6, 4.4, 5.4, 3, ["• Sentinel-2 passa às 12:50 UTC e nunca vê a preamar de sizígia (aliasing)",
                             "• Sentinel-1 (08 UTC) vê níveis acima da MHWS", NUM.get("S1_slide", "• Resultado do radar no relatório"),
-                            "• O3 × O2 em Salvador: CSI 0,90"], 15)
+                            "• O3 × O2 em Salvador: CSI 0,93"], 15)
 # 15 — usando o programa
 n += 1
 s = prs.slides.add_slide(BL)

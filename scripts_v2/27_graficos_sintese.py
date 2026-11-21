@@ -70,7 +70,7 @@ if __name__ == "__main__":
         salvar(fig, "Fig_validacao_DEM")
         resumo["DEM"] = rd
     # 2) validação da maré (pares preamar/baixa-mar) ---------------------------------------------------------
-    pref = "s1_intermare" if os.path.exists(os.path.join(VAL, "s1_intermare_metricas.csv")) else "intermare"
+    pref = next((x for x in ("s1_multipares", "s1_intermare", "intermare") if os.path.exists(os.path.join(VAL, f"{x}_metricas.csv"))), "intermare")
     f = os.path.join(VAL, f"{pref}_metricas.csv")
     if os.path.exists(f):
         m = pd.read_csv(f)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         s = pd.concat([s[(s.setor == "TOTAL_COSTA_BAHIA") & ~amp & (s.variante != "base")],
                        s[(s.setor == "S2_Salvador_BTS") & amp]], ignore_index=True)
         rot = {"dem_cop30": "DEM: Copernicus GLO-30", "conectividade_4": "4-connectivity", "ell_150m": "ℓ = 150 m",
-               "ell_600m": "ℓ = 600 m", "vlm_menos1": "VLM −1 mm/yr", "vlm_mais1": "VLM +1 mm/yr",
+               "ell_300m": "ℓ = 300 m", "ell_600m": "ℓ = 600 m", "vlm_menos1": "VLM −1 mm/yr", "vlm_mais1": "VLM +1 mm/yr",
                "amp_0.9_S2": "Tide amplification 0.9 (S2 only)", "amp_1.1_S2": "Tide amplification 1.1 (S2 only)"}
         fig, ax = plt.subplots(figsize=(7.2, 3.8))
         ordem = s[(s.cenario == "ssp585")].set_index("variante")["dif_vs_base_%"].abs().sort_values().index
@@ -175,11 +175,18 @@ if __name__ == "__main__":
     atual = a_[a_.cenario == "atual"].area_esperada_ha.iloc[0]
     e = pd.read_csv(os.path.join(TB, "exposicao_O2.csv"))
     e = e[e.setor == "TOTAL_COSTA_BAHIA"]
+    f25 = os.path.join(RES, "hoje_2025", "tabelas", "areas_por_classe_ha.csv")      # linha "hoje" (P9), se existir
+    h25 = pd.read_csv(f25) if os.path.exists(f25) else None
+    if h25 is not None:
+        h25 = h25[h25.setor == "TOTAL_COSTA_BAHIA"]
     fig, ax = plt.subplots(figsize=(7.2, 3.8))
     for ssp in ["ssp119", "ssp126", "ssp245", "ssp370", "ssp585"]:
         z = a_[a_.cenario == ssp].sort_values("ano")
         anos = [2014] + list(z.ano)
         vals = [atual] + list(z.area_esperada_ha)
+        if h25 is not None and (h25.cenario == ssp).any():
+            anos.insert(1, 2025)
+            vals.insert(1, h25[h25.cenario == ssp].area_esperada_ha.iloc[0])
         ax.plot(anos, np.array(vals) / 1000, "-o", ms=3.5, color=COR[ssp], label=LAB[ssp], lw=1.6)
         ez = e[e.cenario == ssp].sort_values("ano")
         if len(ez):

@@ -329,6 +329,22 @@ def fig_costa(cen, ano, meta, uf, ba, st, n, ref):
         c = r.geometry.representative_point()
         ax.text(c.x + 26000, c.y, r.setor.split("_")[0], fontsize=fs["lab"], fontweight="bold", color="#111111",
                 path_effects=[pe.withStroke(linewidth=3, foreground="w")], zorder=7)
+    if cen == "atual":                                                # Fig. 1: marégrafo e subdomínio do O3
+        tr = Transformer.from_crs("EPSG:4326", _v2.CRS, always_xy=True)
+        gx, gy = tr.transform(*_v2.SALVADOR)
+        f_sub = os.path.join(OUT, "validacao", "_subdominio_salvador", "dem.tif")
+        if os.path.exists(f_sub):
+            with rasterio.open(f_sub) as r_:
+                b_ = r_.bounds
+                t2 = Transformer.from_crs(r_.crs, _v2.CRS, always_xy=True)
+            xs, ys = t2.transform([b_.left, b_.right, b_.right, b_.left], [b_.bottom, b_.bottom, b_.top, b_.top])
+            ax.add_patch(Rectangle((min(xs), min(ys)), max(xs) - min(xs), max(ys) - min(ys), fc="none",
+                                   ec="#0057a3", lw=1.6, zorder=8))
+        ax.plot(gx, gy, marker="^", ms=9, mfc="#0057a3", mec="w", mew=1.0, zorder=9, ls="none")
+        ax.annotate("Salvador\ntide gauge (▲)\nO3 subdomain (□)", xy=(gx, gy), xytext=(gx + 12000, gy - 50000),
+                    fontsize=fs["leg"] - 1, color="#0057a3", fontweight="bold", va="top", zorder=9,
+                    arrowprops=dict(arrowstyle="-", color="#0057a3", lw=1.0),
+                    path_effects=[pe.withStroke(linewidth=3, foreground="w")])
     escala_norte(ax, "lr", k=1.45, fs=12, fsn=14)
     xr_in = 0.62 + mw + 0.22
     wr_in = W - xr_in - 0.08
@@ -339,7 +355,7 @@ def fig_costa(cen, ano, meta, uf, ba, st, n, ref):
     tit = "Present day (MSL 2004–2024)" if cen == "atual" else f"{SSP_LAB[cen]}, {ano}"
     fig.text(xr, Y(0.18), "Probability of\nconnected\ninundation —\ncoast of Bahia", fontsize=fs["tit"],
              fontweight="bold", va="top", linespacing=1.05)
-    fig.text(xr, Y(1.48), f"{tit} · {ref}", fontsize=fs["sub"], va="top")
+    fig.text(xr, Y(1.48), f"{tit}\n{ref}" if len(f"{tit} · {ref}") > 26 else f"{tit} · {ref}", fontsize=fs["sub"], va="top")
     regua(1.95)
     fig.text(xr, Y(2.05), "Location (Brazil)", fontsize=fs["sec"], fontweight="bold", va="top")
     loc = fig.add_axes([X(xr_in), Y(4.62), X(wr_in), 2.30 / H])
@@ -456,6 +472,8 @@ if __name__ == "__main__":
     if not a.so:
         for f in glob.glob(os.path.join(OUT, "mapas", "*")):
             os.remove(f)
+    if "atual" in so and ano_base:                                    # só a Fig. 1 (linha de base)
+        fig_costa("atual", ano_base, meta, uf, ba, st, n, ref)
     if "costa" in so:
         for cen, ano in combos:
             fig_costa(cen, ano, meta, uf, ba, st, n, ref)

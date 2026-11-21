@@ -18,7 +18,7 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 AM = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))       # Ana_Model
-RES, ENT, REPO = os.path.join(AM, "resultados_O2_Bahia"), os.path.join(AM, "entregas"), os.path.join(AM, "CoastShift")
+RES, ENT, REPO = os.path.join(AM, "resultados_O2_Bahia", "principal_662m"), os.path.join(AM, "entregas"), os.path.join(AM, "CoastShift")
 ART, FIG = os.path.join(ENT, "01_artigo"), os.path.join(ENT, "01_artigo", "figuras")
 SUP = os.path.join(ART, "suplementar")
 
@@ -113,6 +113,12 @@ if __name__ == "__main__":
             if os.path.exists(os.path.join(RES, f + ext)):
                 shutil.copy(os.path.join(RES, f + ext), FIG)
     # 2) textos da validação S1
+    for f_ in ("Fig_sensibilidade_parametros.png", "Fig_sensibilidade_parametros.pdf"):
+        shutil.copy(os.path.join(os.path.dirname(RES), "sensibilidade_parametros_todos", f_), os.path.join(FIG, f_.replace("_parametros", "")))
+    for f_ in ("Fig_sensibilidade_ell.png", "Fig_validacao_entremares.png"):
+        for d__ in ("sensibilidade_ell", "validacao_entremares"):
+            if os.path.exists(os.path.join(os.path.dirname(RES), d__, f_)):
+                shutil.copy(os.path.join(os.path.dirname(RES), d__, f_), FIG)
     s1 = json.load(open(os.path.join(ART, "s1_texto.json"), encoding="utf-8"))
     for md, chaves in [(os.path.join(ART, "EN", "manuscript_EN.md"), ("S1_ABSTRACT", "S1_RESULTADOS")),
                        (os.path.join(ART, "PT", "manuscrito_PT.md"), ("S1_RESUMO", "S1_RESULTADOS_PT"))]:
@@ -128,7 +134,7 @@ if __name__ == "__main__":
     for pasta in ("episodico_NMM", "episodico_TR10", "episodico_TR100", "horizonte_2150"):
         for f in glob.glob(os.path.join(RES, pasta, "mapas", "*.png")):
             shutil.copy(f, os.path.join(SUP, "mapas_episodicos_2150", f"{pasta}_{os.path.basename(f)}"))
-    for f in glob.glob(os.path.join(RES, "tabelas", "*.*")) + glob.glob(os.path.join(RES, "sensibilidade", "*.csv")):
+    for f in glob.glob(os.path.join(RES, "tabelas", "*.*")) + glob.glob(os.path.join(os.path.dirname(RES), "sensibilidade_parametros_todos", "*.csv")) + glob.glob(os.path.join(os.path.dirname(RES), "sensibilidade_ell", "*.csv")):
         shutil.copy(f, os.path.join(SUP, "tabelas"))
     for f in glob.glob(os.path.join(RES, "validacao", "*.csv")) + glob.glob(os.path.join(RES, "validacao", "*.json")):
         shutil.copy(f, os.path.join(SUP, "validacao"))
@@ -136,14 +142,15 @@ if __name__ == "__main__":
         if os.path.exists(os.path.join(RES, "graficos", f + ".png")):
             shutil.copy(os.path.join(RES, "graficos", f + ".png"), FIG)
     mun = pd.read_csv(os.path.join(RES, "tabelas", "municipios_O2.csv"))
-    sen = pd.read_csv(os.path.join(RES, "sensibilidade", "sensibilidade.csv"))
-    sen_t = sen[sen.setor == "TOTAL_COSTA_BAHIA"].pivot_table(index="variante", columns="cenario", values="dif_vs_base_%").round(1).reset_index()
+    sen = pd.read_csv(os.path.join(os.path.dirname(RES), "sensibilidade_parametros_todos", "sensibilidade_parametros.csv"))
+    sen = sen[(sen.setor == "TOTAL_COSTA_BAHIA") & (((sen.cenario == "atual")) | (sen.ano == 2100))]
+    sen_t = sen.assign(k=sen.cenario + " " + sen.ano.astype(str)).pivot_table(index="variante", columns="k", values="dif_vs_base_%").round(1).reset_index()
     par = json.load(open(os.path.join(AM, "dados_bahia_v2", "ondas", "ondas_setores.json"), encoding="utf-8"))
     mar = json.load(open(os.path.join(AM, "dados_bahia_v2", "mares", "mares_setores.json"), encoding="utf-8"))
     tpar = pd.DataFrame([{"sector": k, "MHWS (m)": mar[k]["mhws"], "MHHW (m)": mar[k]["mhhw"], "f_s": mar[k]["fator_transferencia_salvador"],
                           "Hs99 (m)": v["hs"], "Tp (s)": v["tp"], "beta_f": v["beach_slope"], "set-up (m)": v["setup_stockdon_m"],
                           "open coast": v["costa_aberta"]} for k, v in par.items()])
-    s1v = os.path.join(RES, "validacao", "s1_intermare_metricas.csv")
+    s1v = os.path.join(RES, "validacao", "s1_multipares_metricas.csv")
     tval = pd.read_csv(s1v) if os.path.exists(s1v) else pd.DataFrame()
     for lang in ("EN", "PT"):
         L = (lambda en, pt: en if lang == "EN" else pt)
@@ -155,24 +162,26 @@ if __name__ == "__main__":
                L("**Table S1.** Tidal datums (relative to MSL), transfer factor and wave parameters by sector.", "**Tabela S1.** Níveis de maré (em relação ao NMM), fator de transferência e parâmetros de onda por setor."),
                tabela_md(tpar),
                L("# S3. Sensitivity results", "# S3. Resultados de sensibilidade"),
-               L("**Table S2.** Change in coast-wide expected inundated area relative to the baseline (%), N = 100, paired seeds (tide-amplification variants affect sector S2 only; see main text).",
-                 "**Tabela S2.** Variação da área esperada inundada da costa em relação à base (%), N = 100, sementes pareadas (as variantes de amplificação afetam só o S2; ver texto principal)."),
+               L("**Table S2.** Change in coast-wide expected inundated area relative to the baseline (%), present day and 2100 for the five SSPs; N = 500, paired seeds, fixed water level (all 21 scenario–horizon combinations in `tabelas/sensibilidade_parametros.csv`).",
+                 "**Tabela S2.** Variação da área esperada inundada da costa em relação à base (%), Atual e 2100 nos cinco SSPs; N = 500, sementes pareadas, nível fixo (as 21 combinações estão em `tabelas/sensibilidade_parametros.csv`)."),
                tabela_md(sen_t),
                L("# S4. Municipalities", "# S4. Municípios"),
                L("**Table S3.** Expected inundated area (ha) and expected exposed population by municipality (top 20 by SSP5-8.5 2100).",
                  "**Tabela S3.** Área esperada inundada (ha) e população exposta esperada por município (20 maiores no SSP5-8.5 2100)."),
                tabela_md(mun, ["municipio", "E_A_ha_atual", "E_A_ha_ssp245_2100", "E_A_ha_ssp585_2100", "pop_esperada_atual", "pop_esperada_ssp585_2100"], 20),
                f"![{L('Figure S1. Municipalities with the largest expected inundated area.', 'Figura S1. Municípios com maior área esperada inundada.')}](../figuras/Fig_municipios_top15.png)",
-               L("# S5. Uncertainty and convergence", "# S5. Incerteza e convergência"),
+               L("# S5. Uncertainty, sensitivity to the correlation length and intertidal consistency", "# S5. Incerteza, sensibilidade ao comprimento de correlação e consistência entremarés"),
+               f"![{L('Figure S4. Sensitivity of expected inundated area to the DEM-error correlation length (166, 331, 662 and 1,324 m).', 'Figura S4. Sensibilidade da área esperada inundada ao comprimento de correlação do erro do DEM (166, 331, 662 e 1.324 m).')}](../figuras/Fig_sensibilidade_ell.png)",
+               f"![{L('Figure S5. Fraction of mangrove, salt flat and flooded grassland with p ≥ 0.5 by correlation length.', 'Figura S5. Fração de mangue, apicum e campo alagado com p ≥ 0,5 por comprimento de correlação.')}](../figuras/Fig_validacao_entremares.png)",
                f"![{L('Figure S2. Monte Carlo standard error and FABDEM × Copernicus agreement (SSP5-8.5, 2100).', 'Figura S2. Erro-padrão do Monte Carlo e concordância FABDEM × Copernicus (SSP5-8.5, 2100).')}](../figuras/Fig_incerteza.png)",
-               f"![{L('Figure S3. Monte Carlo convergence (N = 250 vs N = 500).', 'Figura S3. Convergência do Monte Carlo (N = 250 × N = 500).')}](../figuras/Fig_convergencia.png)",
+               f"![{L('Figure S3. Parametric sensitivity by scenario and horizon, including Monte Carlo convergence (N = 250 vs N = 500).', 'Figura S3. Sensibilidade paramétrica por cenário e horizonte, incluindo a convergência do Monte Carlo (N = 250 × N = 500).')}](../figuras/Fig_sensibilidade.png)",
                L("# S6. Tidal-inundation validation by sector", "# S6. Validação da inundação pela maré por setor"),
-               (tabela_md(tval, [c for c in ["setor", "preamar", "nivel_preamar_m", "baixamar", "nivel_baixamar_m", "TP", "FP", "FN", "CSI", "HR", "FAR", "Brier", "sem_mangue_CSI"] if c in tval.columns]) if len(tval) else ""),
-               L("Sentinel-2 single-scene and high/low-tide pair diagnostics are in `validacao/` (sentinel2_cena_unica_metricas.csv, intermare_metricas.csv).",
-                 "Os diagnósticos do Sentinel-2 (cena única e pares preamar/baixa-mar) estão em `validacao/` (sentinel2_cena_unica_metricas.csv, intermare_metricas.csv)."),
+               (tabela_md(tval, [c for c in ["setor", "n_pares", "TP", "FP", "FN", "CSI", "HR", "FAR", "Brier", "sem_mangue_CSI"] if c in tval.columns]) if len(tval) else ""),
+               L("Sentinel-1: 18 high/low-tide pairs (three per sector). Sentinel-2 pair diagnostics (17 pairs) are in `validacao/` (s2_multipares_metricas.csv, s2_multipares_por_par.csv).",
+                 "Sentinel-1: 18 pares de preamar e baixa-mar (três por setor). Os diagnósticos do Sentinel-2 (17 pares) estão em `validacao/` (s2_multipares_metricas.csv, s2_multipares_por_par.csv)."),
                L("# S7. Maps", "# S7. Mapas"),
-               L("All coast maps (present day and 15 scenario–horizon combinations), sector panels, and the maps for MSL, 10- and 100-year return levels and 2150 are provided as 600 dpi PNG files in `mapas_principais/` and `mapas_episodicos_2150/`. GeoTIFF probability and class rasters are reproducible with scripts 21–22.",
-                 "Todos os mapas da costa (Atual e 15 combinações cenário–horizonte), os painéis por setor e os mapas de NMM, TR 10 e 100 anos e 2150 estão em PNG 600 dpi nas pastas `mapas_principais/` e `mapas_episodicos_2150/`. Os rasters GeoTIFF de probabilidade e classe são reproduzíveis com os scripts 21–22."),
+               L("All coast maps (present day and 15 scenario–horizon combinations; N = 500), sector panels, and the maps for MSL, 10- and 100-year return levels (five SSPs) and 2150 are provided as 600 dpi PNG files in `mapas_principais/` and `mapas_episodicos_2150/`. GeoTIFF probability and class rasters are reproducible with scripts 21–22.",
+                 "Todos os mapas da costa (Atual e 15 combinações cenário–horizonte; N = 500), os painéis por setor e os mapas de NMM, TR 10 e 100 anos (cinco SSPs) e 2150 estão em PNG 600 dpi nas pastas `mapas_principais/` e `mapas_episodicos_2150/`. Os rasters GeoTIFF de probabilidade e classe são reproduzíveis com os scripts 21–22."),
                L("# S8. Software", "# S8. Software"),
                L("CoastShift v1.0.1 (GPL-3.0): https://github.com/rnvuefsppgm/CoastShift. Scripts 00–29 (`scripts_v2`), the application (`app.py`, `CoastShift.exe`) and the tutorials are listed in `04_scripts_e_tutorial` and `05_tutorial_aplicacao`.",
                  "CoastShift v1.0.1 (GPL-3.0): https://github.com/rnvuefsppgm/CoastShift. Os scripts 00–29 (`scripts_v2`), o aplicativo (`app.py`, `CoastShift.exe`) e os tutoriais estão em `04_scripts_e_tutorial` e `05_tutorial_aplicacao`.")]
